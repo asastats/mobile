@@ -1,0 +1,26 @@
+node_modules/
+www/server-url.js
+
+# Build outputs
+android/app/build/
+android/build/
+android/.gradle/
+android/local.properties
+android/capacitor-cordova-android-plugins/build/
+ios/App/build/
+ios/DerivedData/
+*.ipa
+*.aab
+*.apk
+
+# Signing
+*.jks
+*.keystore
+*.p8
+*.p12
+*.mobileprovision
+android/keystore.properties
+
+# Firebase config (environment-specific, supplied in CI)
+google-services.json
+GoogleService-Info.plist

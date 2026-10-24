@@ -1,0 +1,66 @@
+# Secret names are listed in capacitor/USER-ACTIONS.md (planning repo) and README.md.
+name: Android
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - run: npm ci
+      - run: npx cap sync android
+        env:
+          ASASTATS_RELEASE: "1"
+
+      - name: Debug APK (sideload)
+        working-directory: android
+        run: ./gradlew --no-daemon assembleDebug
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: asastats-debug-apk
+          path: android/app/build/outputs/apk/debug/*.apk
+
+      - name: Upload keystore
+        id: keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "::notice::ANDROID_KEYSTORE_BASE64 not set: skipping the release bundle"
+            exit 0
+          fi
+          echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/upload.jks"
+          echo "file=$RUNNER_TEMP/upload.jks" >> "$GITHUB_OUTPUT"
+
+      - name: Release bundle (Play)
+        if: steps.keystore.outputs.file
+        working-directory: android
+        env:
+          ANDROID_KEYSTORE_FILE: ${{ steps.keystore.outputs.file }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: ./gradlew --no-daemon bundleRelease
+
+      - if: steps.keystore.outputs.file
+        uses: actions/upload-artifact@v4
+        with:
+          name: asastats-release-aab
+          path: android/app/build/outputs/bundle/release/*.aab

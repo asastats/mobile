@@ -1,0 +1,27 @@
+{
+  "name": "asastats-mobile",
+  "version": "1.1.0",
+  "buildNumber": 110000,
+  "description": "ASA Stats app: a Capacitor shell around www.asastats.com",
+  "scripts": {
+    "sync": "cap sync",
+    "sync:android": "cap sync android",
+    "sync:ios": "cap sync ios"
+  },
+  "author": "Ivica Paleka",
+  "license": "UNLICENSED",
+  "type": "commonjs",
+  "dependencies": {
+    "@capacitor/android": "8.5.3",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/browser": "^8.0.5",
+    "@capacitor/core": "8.5.3",
+    "@capacitor/ios": "8.5.3",
+    "@capacitor/share": "^8.0.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.5.3",
+    "typescript": "^5.9.3"
+  },
+  "private": true
+}
