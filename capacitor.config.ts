@@ -38,6 +38,14 @@ const config: CapacitorConfig = {
   android: {
     appendUserAgent: userAgent('android'),
   },
+  plugins: {
+    // app.js hides it on DOMContentLoaded; auto-hide is the fallback for a failed load.
+    SplashScreen: {
+      launchAutoHide: true,
+      launchShowDuration: 3000,
+      backgroundColor: '#140a2e',
+    },
+  },
 };
 
 export default config;

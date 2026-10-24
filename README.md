@@ -47,6 +47,12 @@ Repository secrets:
 | `ASC_ISSUER_ID` | App Store Connect issuer id |
 | `ASC_KEY_P8_BASE64` | the API key file, `base64 -w0 AuthKey_XXXX.p8` |
 
+## Icons and splash
+
+Edit `assets/icon.png` (1024², opaque) or `assets/icon-foreground.png` (the
+Android adaptive foreground), then run `python3 scripts/make-icons.py`
+(Pillow) and commit the native files it rewrites.
+
 ## Versions
 
 `package.json` holds both numbers; Gradle and the iOS workflow read them from

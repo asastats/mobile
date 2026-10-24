@@ -193,3 +193,90 @@ The export uploads straight to App Store Connect (`destination: upload`), so no
 
 The project file holds 1.1.0 / 110000 for local builds; CI overrides both from
 `package.json`. Keep them in step when bumping by hand.
+
+---
+
+## scripts/make-icons.py, assets/ (2026-10-24)
+
+### Why a Pillow script and not `@capacitor/assets`
+
+`@capacitor/assets` renders with `sharp` 0.32, whose install script downloads
+a prebuilt libvips. npm 11 blocks install scripts until they are approved one
+by one, so the tool installed but could not render. The native projects
+already hold every icon and splash file at its final path and size (from
+`cap add`), so the script only overwrites them. Approving a native-binary
+download to resize a few PNGs was not worth it. Running it again is
+idempotent: it reads each target's size from the file it replaces.
+
+### Sources and what is derived from them
+
+- `assets/icon.png`: the user's 1024² icon (two-line wordmark on `#140a2e`).
+  It is RGBA, though fully opaque, and App Store Connect rejects an icon with
+  an alpha channel, so it is flattened to RGB for iOS
+  (`AppIcon-512@2x.png`) and for the Android legacy square icon.
+- `assets/icon-foreground.png`: the user's 3500² transparent wordmark, the
+  Android adaptive foreground (108 dp canvas). The adaptive background is the
+  colour `ic_launcher_background` = `#140A2E`.
+- `ic_launcher_round.png` (Android 7.x only; 8+ uses the adaptive icon): the
+  adaptive icon's visible 72 dp centre in a circle.
+- Splash: the wordmark centred on `#140a2e`. The Android drawables
+  (pre-12 window background) use a third of the short side. The iOS 2732²
+  image is aspect-filled to the screen height by `LaunchScreen.storyboard`,
+  about twice the size on a phone, so it uses a sixth: 36 % of an iPhone's
+  width. Android 12+ ignores the drawable and draws the launcher icon on
+  `windowSplashScreenBackground` (set to the same colour in `styles.xml`;
+  the default is white or black).
+
+### The adaptive foreground runs past the safe zone (measured 2026-10-24)
+
+The farthest opaque pixel of the wordmark is at 106.5 % of the 66 dp
+safe-zone radius (1139 px of 1069 px on the 3500² canvas). 1.9 % of its opaque
+pixels lie outside that circle. It does fit a plain circle mask (97.6 % of the
+36 dp radius). On a circle launcher the ends of "STATS" touch the edge; the
+squircle is clear. The handoff had estimated about 99 %. Reported to the user as
+their design decision; not changed.
+
+The Capacitor template's leftovers `drawable-v24/ic_launcher_foreground.xml`
+and `drawable/ic_launcher_background.xml` (the Android robot) were
+referenced by nothing once the adaptive icon pointed at the mipmaps, so they
+were deleted.
+
+---
+
+## package.json — plugins (A5, 2026-10-24)
+
+Registered: App, Browser, Share, SplashScreen, StatusBar, Filesystem,
+Preferences, Haptics. Every page on www.asastats.com can call all of them (see
+"Plugins are the attack surface" above). On Android, Filesystem brings no
+storage permission, so pages reach only the app's own directories. Haptics
+adds `VIBRATE`.
+
+`@capacitor-firebase/messaging` is **not** added yet. Without
+`GoogleService-Info.plist` (user action U5), calling `FirebaseApp.configure()`
+crashes the iOS app at launch, and nothing calls push before F8. It comes with
+F8, together with the config files.
+
+## capacitor.config.ts — `SplashScreen` auto-hides after 3 s (2026-10-24)
+
+The handoff planned `launchAutoHide: false`, with app.js hiding the splash and
+"a timeout in the shell" as the fallback. The plugin has no fallback timeout
+when auto-hide is off: if app.js never runs (offline page, an old website
+deploy, a JavaScript error), the splash would stay up for good. So auto-hide
+stays on with a 3-second ceiling, and app.js calls `SplashScreen.hide()` as
+soon as the page is ready. Until the website ships F3, every launch shows the
+splash for the full 3 s.
+
+## android/app/src/main/res/xml/file_paths.xml — cache only (2026-10-24)
+
+The Capacitor template also exposed `<external-path path=".">`: the whole
+external storage root could be handed out through the `FileProvider`. Every
+page of the site can call Share, so the provider exposes only what the
+download flow uses. The website's `app.js` writes downloads to the cache
+directory (`Directory.Cache`) and shares them from there. If a later feature
+writes elsewhere, add that directory here, nothing wider.
+
+**Correction 2026-10-24** to "The adaptive foreground runs past the safe
+zone" above: the user delivered a new `asastats-foreground.png` the same day,
+with the wordmark scaled down. Its farthest opaque pixel is now at 93.1 % of
+the 66 dp safe-zone radius, with no pixel outside, so every launcher mask
+shows it whole. Icons regenerated with `scripts/make-icons.py`.
