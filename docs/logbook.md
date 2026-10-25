@@ -329,3 +329,44 @@ The build still needs the file, because the project now lists it as a resource
   launcher icon as a white silhouette in the status bar, which for an opaque
   icon is a plain white circle or square. It needs a white-on-transparent small
   icon, which is a design choice for the user.
+
+**Correction 2026-10-25** to "Not done: an Android notification icon" in the
+F8 entry above: done, next entry.
+
+## scripts/make-notification-icon.py, res/drawable/ic_stat_asastats.xml, AndroidManifest.xml — notification icon (2026-10-25)
+
+- Android draws the status-bar icon from its alpha channel only, all in white.
+  The launcher icon is opaque, so without
+  `com.google.firebase.messaging.default_notification_icon` FCM notifications
+  showed a plain white circle.
+- **Shape: the full two-line wordmark, the user's choice.** Four candidates
+  were rendered at 24-96 px (full wordmark, "ASA", "STATS", a single "A"). The
+  single "A" was the most legible at status-bar size; the user chose the full
+  wordmark. At 20 dp it is about 7.5 dp tall, so the letters are small; if
+  that reads badly on real phones, the script makes switching cheap.
+- **A vector drawable, not PNGs per density.** One file, sharp at every
+  density, and generated from `assets/logo.svg` (a copy of the planning repo's
+  `capacitor/asastats-logo.svg`) rather than drawn by hand. The script drops
+  the black background, keeps both coloured groups with their transforms
+  (uniform scale + translate, mapped to `<group>` attributes, which compose
+  the same way), paints every shape white and centres the glyph in the
+  central 20 of 24 dp. It understands only the straight-line path commands
+  this logo uses and stops with an error on any other, rather than computing
+  a wrong bounding box.
+- Checked by translating the drawable back into SVG and rendering it: same
+  silhouette, counters intact, centred. Not yet seen on a device.
+- Tint `#6E2CF4` (`notification_accent`, the logo's purple), the user's
+  choice. It colours the icon and app name in the expanded notification on
+  Android versions that apply the notification colour.
+
+## android/app/build.gradle — the debug build needs its own Firebase app (2026-10-25)
+
+The first CI run with `GOOGLE_SERVICES_JSON_BASE64` failed in
+`:app:processDebugGoogleServices`: "No matching client found for package name
+'com.asastats.app.debug'". The google-services plugin looks up the variant's
+final application id in `google-services.json`, and the debug build carries
+the `.debug` suffix (see "Debug builds are `com.asastats.app.debug`" above).
+The suffix stays. The debug package is registered as a second Android app in
+the same Firebase project, so one `google-services.json` lists both, and the
+debug APK used for testing receives push too. Release builds are unaffected.
+The steps are USER-ACTIONS U5 step 7 in the planning repo.

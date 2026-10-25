@@ -67,6 +67,12 @@ Edit `assets/icon.png` (1024², opaque) or `assets/icon-foreground.png` (the
 Android adaptive foreground), then run `python3 scripts/make-icons.py`
 (Pillow) and commit the native files it rewrites.
 
+The Android notification icon (status bar) is a white silhouette of
+`assets/logo.svg`: after changing the logo, run
+`python3 scripts/make-notification-icon.py` (standard library only) and commit
+`android/app/src/main/res/drawable/ic_stat_asastats.xml`. Its tint in the
+notification shade is `notification_accent` in `res/values/colors.xml`.
+
 ## Versions
 
 `package.json` holds both numbers; Gradle and the iOS workflow read them from
