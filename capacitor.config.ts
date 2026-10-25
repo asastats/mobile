@@ -45,6 +45,20 @@ const config: CapacitorConfig = {
       launchShowDuration: 3000,
       backgroundColor: '#140a2e',
     },
+    // iOS: show an alert that arrives while the app is open, too.
+    FirebaseMessaging: {
+      presentationOptions: ['alert', 'badge', 'sound'],
+    },
+  },
+  // The plugin's own README: avoids an SPM package identity collision (needs CLI 8.4+).
+  experimental: {
+    ios: {
+      spm: {
+        packageOptions: {
+          '@capacitor-firebase/messaging': { symlink: true },
+        },
+      },
+    },
   },
 };
 

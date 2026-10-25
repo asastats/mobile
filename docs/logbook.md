@@ -280,3 +280,52 @@ zone" above: the user delivered a new `asastats-foreground.png` the same day,
 with the wordmark scaled down. Its farthest opaque pixel is now at 93.1 % of
 the 66 dp safe-zone radius, with no pixel outside, so every launcher mask
 shows it whole. Icons regenerated with `scripts/make-icons.py`.
+
+**Correction 2026-10-25** to "package.json — plugins (A5)" above: with
+`@capacitor-firebase/messaging` 8.5.2 a missing `GoogleService-Info.plist` no
+longer crashes the app. The plugin checks `FirebaseOptions.defaultOptions()`
+first and only logs "Firebase was not configured" (`ios/Plugin/FirebaseMessaging.swift`).
+The build still needs the file, because the project now lists it as a resource
+(next entry).
+
+## package.json, capacitor.config.ts, ios/App, .github/workflows — native push (F8, 2026-10-25)
+
+- **`@capacitor-firebase/messaging` pinned at 8.5.2.** Its `firebase` peer is
+  optional (`peerDependenciesMeta`), so npm does not install the Firebase web
+  SDK; nothing here needs it. The website's `app.js` reaches the plugin with
+  `registerPlugin("FirebaseMessaging")` instead of importing this package
+  (frontend `docs/logbook.md`, F8), so the version is pinned only here; if its
+  API changes, update the declarations in frontend `wallet/src/app/push.ts`.
+  Every page can call it (see "Plugins are the attack surface"): the worst a
+  page can do is ask for notification permission or read this phone's FCM
+  token, which only lets it send to this phone through our own Firebase
+  project.
+- **iOS, SPM.** `experimental.ios.spm.packageOptions` with `symlink: true`, as
+  the plugin's README asks, avoids a SwiftPM package identity collision
+  between the npm package and the Firebase iOS SDK. `cap sync` then writes
+  `ios/App/CapApp-SPM/symlinks/` with an absolute link into `node_modules`,
+  so that folder is git-ignored and CI recreates it.
+- **`AppDelegate.swift`** forwards the APNs token, its failure and background
+  notifications to the plugin, as its README requires. `FirebaseApp.configure()`
+  is called by the plugin itself, so it is not in the delegate.
+- **`GoogleService-Info.plist` is a resource of the App target**
+  (`project.pbxproj`, ids `A1F8C0DE2F0E0001000000{01,02}`), because Firebase
+  reads it from the bundle. That makes it required at build time: the iOS
+  workflow fails early, with a message, when `GOOGLE_SERVICE_INFO_PLIST_BASE64`
+  is missing. The Android one stays optional: `app/build.gradle` applies
+  google-services only when the JSON exists, so the spike APK still builds.
+- **Both files are git-ignored** and written by CI. They are not secret (the
+  app ships them), but they are tied to one Firebase project, and keeping them
+  out of the repository keeps a fork from sending through ours.
+- `aps-environment` stays `development` in `App.entitlements`; Xcode writes
+  `production` when it exports for the App Store with the distribution
+  profile. Background mode `remote-notification` was already in Info.plist
+  (A3).
+- **`presentationOptions: ['alert', 'badge', 'sound']`** (iOS): an alert that
+  arrives while the app is open still shows as a banner. Android shows it
+  through FCM's default channel.
+- **Not done: an Android notification icon.** Without
+  `com.google.firebase.messaging.default_notification_icon` Android draws the
+  launcher icon as a white silhouette in the status bar, which for an opaque
+  icon is a plain white circle or square. It needs a white-on-transparent small
+  icon, which is a design choice for the user.

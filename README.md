@@ -33,7 +33,7 @@ committed native configs, and those must point at production.
 | Workflow | Always | With secrets |
 |---|---|---|
 | `android.yml` | debug APK (`com.asastats.app.debug`, "ASA Stats dev"), artifact `asastats-debug-apk` | signed `.aab`, artifact `asastats-release-aab` |
-| `ios.yml` | simulator compile | archive, sign, upload to TestFlight |
+| `ios.yml` | simulator compile (needs `GOOGLE_SERVICE_INFO_PLIST_BASE64`) | archive, sign, upload to TestFlight |
 
 Repository secrets:
 
@@ -46,6 +46,20 @@ Repository secrets:
 | `ASC_KEY_ID` | App Store Connect API key id |
 | `ASC_ISSUER_ID` | App Store Connect issuer id |
 | `ASC_KEY_P8_BASE64` | the API key file, `base64 -w0 AuthKey_XXXX.p8` |
+| `GOOGLE_SERVICES_JSON_BASE64` | Firebase Android config, `base64 -w0 google-services.json`. Optional: without it the APK builds but has no push |
+| `GOOGLE_SERVICE_INFO_PLIST_BASE64` | Firebase iOS config, `base64 -w0 GoogleService-Info.plist`. **Required** for every iOS build, the simulator one too |
+
+## Firebase config files
+
+Push notifications (FCM, `@capacitor-firebase/messaging`) need the two Firebase
+config files of the project `asa-stats-d0931`. They are git-ignored. CI writes
+them from the two secrets above; for a local build copy them to:
+
+    android/app/google-services.json
+    ios/App/App/GoogleService-Info.plist
+
+The iOS project lists the plist as a resource, so Xcode stops with "Build input
+file cannot be found" when it is missing.
 
 ## Icons and splash
 
