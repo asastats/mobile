@@ -496,3 +496,33 @@ page, and offline → `offline.html` → Retry.
   fail this run at 0 %.
 - Not run locally (no emulator on the Raspberry Pi); the client API and test
   collection were checked in a throwaway venv on 2026-10-26.
+
+## functional_tests/test_local.py, functional_tests/server/, functional.yml job `local` — Appium against a CI Django server (2026-10-26)
+
+Step 3b of `capacitor/MOBILE-TESTING.md`. Features behind an account cannot
+be tested against production without a production test account, so the
+`local` job checks out `asastats/frontend` (public, with its submodules) at
+`main`, runs it as frontend's own `build.yml` does (Postgres 15 and Redis
+services, the same `.env` lines), seeds one verified account, and starts
+`runserver` on `0.0.0.0:8000`. The APK is built with
+`ASASTATS_URL=http://10.0.2.2:8000`, the emulator's name for the runner;
+Capacitor's sync then allows cleartext. `functional_tests/server/app_settings.py`
+is frontend's development settings plus that host, so frontend itself needs
+no CI-only setting. Development settings send engine calls to
+`127.0.0.1:8001`, where nothing listens: the pages tested do not need the
+engine, and nothing reaches production.
+
+What it covers: email sign-in in the WebView; the Delete account page with
+its captcha; the connections page sending Google to the website (F4 Q3); a
+social button going through the bridge into the WebAuth plugin and back
+(over http the plugin answers `invalid`, and the native dialog says the
+sign-in did not finish); and, when the Firebase config secret exists, push
+registration storing an `android` device and the logout link removing it
+(checked in the database).
+
+Still not automated: a real provider sign-in (needs https and a verified
+host, so a store build), downloads to the share sheet (the export endpoints
+need the engine), a notification arriving.
+
+The live and local runs share `functional_tests/` and differ by pytest marker
+(`run-android.sh live|local`), because the server URL is baked into the APK.

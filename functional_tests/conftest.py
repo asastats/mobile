@@ -20,6 +20,10 @@ SITE = os.environ.get("ASASTATS_URL", "https://www.asastats.com")
 APPIUM = os.environ.get("APPIUM_URL", "http://127.0.0.1:4723")
 VERSION = json.loads((ROOT / "package.json").read_text())["version"]
 TIMEOUT = 60
+#: The local suite's account (functional_tests/server/seed.py) and database.
+USER = os.environ.get("APP_TEST_USER", "apptester")
+PASSWORD = os.environ.get("APP_TEST_PASSWORD", "app-tester-pw-1")
+DATABASE_URL = os.environ.get("ASASTATS_DB_URL", "")
 
 
 @pytest.fixture
@@ -62,3 +66,28 @@ def site_loaded(driver):
             " && document.documentElement.classList.contains('in-app');"
         ),
     )
+
+
+def sign_in(driver):
+    """Sign in with email and password, as a reader does in the WebView."""
+    site_loaded(driver)
+    driver.get(f"{SITE}/accounts/login/")
+    site_loaded(driver)
+    driver.find_element("id", "id_login").send_keys(USER)
+    driver.find_element("id", "id_password").send_keys(PASSWORD)
+    driver.find_element("css selector", "#login_form button[type=submit]").click()
+    wait(driver, lambda d: "/accounts/login/" not in d.current_url)
+    site_loaded(driver)
+
+
+def devices():
+    """Return the platforms of the test account's push devices, from the database."""
+    import psycopg
+
+    with psycopg.connect(DATABASE_URL) as connection:
+        rows = connection.execute(
+            "SELECT d.platform FROM widgets_nativepushdevice d"
+            " JOIN auth_user u ON u.id = d.user_id WHERE u.username = %s",
+            (USER,),
+        ).fetchall()
+    return [row[0] for row in rows]

@@ -1,6 +1,10 @@
 """The shell around the live site, on an emulator, read-only against production."""
 
+import pytest
+
 from conftest import PACKAGE, SITE, VERSION, native, site_loaded, wait, webview
+
+pytestmark = pytest.mark.live
 
 
 def test_the_site_loads_in_app_mode(driver):
