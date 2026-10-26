@@ -1,5 +1,5 @@
 node_modules/
-www/server-url.js
+www/offline.html
 
 # Build outputs
 android/app/build/

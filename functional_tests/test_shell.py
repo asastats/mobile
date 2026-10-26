@@ -42,7 +42,8 @@ def test_external_links_open_in_the_browser(driver):
 def test_the_back_button_goes_back_in_history(driver):
     site_loaded(driver)
     start = driver.current_url
-    driver.execute_script(f"window.location.assign('{SITE}/faq/');")
+    # A tap, not location.assign(): Chromium skips, on Back, a page that navigated without one
+    driver.find_element("css selector", 'a[href="/faq/"]').click()
     wait(driver, lambda d: d.current_url.endswith("/faq/"))
 
     press_back(driver)

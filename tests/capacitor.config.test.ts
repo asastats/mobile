@@ -3,7 +3,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
 
 import { version } from "../package.json";
 
-jest.mock("node:fs", () => ({ writeFileSync: jest.fn() }));
+jest.mock("node:fs", () => ({ ...jest.requireActual("node:fs"), writeFileSync: jest.fn() }));
 
 const ENV = { ...process.env };
 
@@ -55,11 +55,11 @@ describe("capacitor.config", () => {
     expect(load({ ASASTATS_RELEASE: "1" }).server?.url).toBe("https://www.asastats.com");
   });
 
-  it("writes the server URL for offline.html's Retry", () => {
+  it("writes offline.html with the server URL for its Retry", () => {
     load({ ASASTATS_URL: "https://staging.example" });
     expect(writeFileSync).toHaveBeenCalledWith(
-      "www/server-url.js",
-      'window.ASASTATS_URL = "https://staging.example";\n'
+      "www/offline.html",
+      expect.stringContaining('<script>window.ASASTATS_URL = "https://staging.example";</script>')
     );
   });
 

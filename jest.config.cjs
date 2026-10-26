@@ -8,7 +8,7 @@ module.exports = {
     ],
   },
   testMatch: ["<rootDir>/tests/**/*.test.ts"],
-  collectCoverageFrom: ["capacitor.config.ts", "www/offline.js"],
+  collectCoverageFrom: ["capacitor.config.ts", "offline/offline.js"],
   coverageThreshold: {
     global: { statements: 100, branches: 100, functions: 100, lines: 100 },
   },

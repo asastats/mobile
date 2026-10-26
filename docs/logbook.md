@@ -81,6 +81,16 @@ is that local URL, not the server's. The config is the one place that knows the
 URL and it runs before every sync, so it writes the file there. The file is
 git-ignored.
 
+#### Correction, 2026-10-26: Android serves only `offline.html` itself
+
+Android loads the page at `https://localhost/offline.html`, not at the
+server's origin, and `WebViewLocalServer` serves only that exact URL locally
+when `server.url` is set (`isMainUrl` needs `serverUrl == null`). Its
+`server-url.js`, `offline.js` and logo went to the network and failed, so
+Retry had no handler and the logo was a broken image on every Android
+device. `capacitor.config.ts` now builds `www/offline.html` from `offline/`
+with all three inlined; see "the offline page, self-contained" below.
+
 ### `server.errorPath` on Android fires on HTTP errors too (2026-10-24)
 
 `BridgeWebViewClient.onReceivedHttpError` loads the error page for **any**
@@ -701,3 +711,50 @@ Nothing listens for `onReceivedHttpError`, so the override is now empty. A
 plugin added later that needs that event would have to be told some other
 way. Lesson: a stub must copy each member's visibility from the source, not
 only its signature.
+
+## functional_tests/conftest.py: the fourth run (2026-10-26)
+
+The website now serves from `frontend/`, and the S11 test passed on the live
+site, which settles S11 on a real build. Live: 5 of 7 passed. Local: 1 of 5.
+All four local failures were one bug in `sign_in`: chromedriver rejects
+`find_element("id", ...)` with "invalid locator", because a W3C WebDriver
+session in a WEBVIEW context has no `id` strategy (only CSS, XPath, link
+text and tag name). UiAutomator2 in NATIVE_APP still takes `id`, so the
+`android:id/...` lookups stay. WebView lookups now use `#id_login` and
+`#id_password`. The live Back and offline-Retry tests are still failing;
+their `failures/` evidence is in the `appium-log-live` artifact.
+
+## offline/, capacitor.config.ts, functional_tests/test_shell.py: the fourth run's two live failures (2026-10-26)
+
+The `appium-log-live` artifact explained both.
+
+**Retry did nothing.** Logcat shows one "Handling local request:
+https://localhost/offline.html" and nothing for `server-url.js` or
+`offline.js`. The screenshot shows the logo as a broken image. Appium's log
+shows the click was made. Capacitor 8's `WebViewLocalServer` serves the
+`errorPath` URL and nothing else locally under `server.url`; other
+`https://localhost/...` requests are proxied to the network. This was never
+a test problem: Retry has not worked on Android since it was written.
+
+The offline page, self-contained: its sources moved to `offline/`
+(`offline.html` as a template, `offline.js`, `asastats-logo.svg`), and
+`capacitor.config.ts` `offlinePage()` writes `www/offline.html` (git-ignored)
+on every CLI run with the server URL, the script and the logo (as a data URI)
+inlined, replacing the generated `www/server-url.js`. It refuses a template
+that lost one of the tags it replaces. The URL is JSON-encoded with `<`
+escaped so it cannot close the script. `offline.html` in `offline/` still
+names the two scripts, so `offline.js` stays a file Jest covers. iOS serves
+local files from `capacitor://localhost` either way, so one page fits both.
+Rejected: an Android-only `shouldInterceptRequest` for the extra files (more
+native code to re-check on each Capacitor upgrade).
+
+**Back minimized the app.** The screenshot is the launcher, and the WebView
+was still on `/faq/`: the site's `handleBack` got `canGoBack: false` and
+called `minimizeApp`. The test navigated with `location.assign()` from a
+script, with no user activation. Chromium's history-manipulation intervention
+marks the page that did that as skipped on Back, and `WebView.canGoBack()`
+follows it. A reader taps a link, which carries activation, so the app is
+not affected. The test now clicks the footer's `/faq/` link through
+chromedriver, which sends real input events. That Chromium explanation fits
+the evidence but is not proven; if the tapped version still minimizes, look
+again.
