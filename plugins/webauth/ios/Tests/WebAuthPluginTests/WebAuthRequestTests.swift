@@ -55,6 +55,8 @@ final class WebAuthRequestTests: XCTestCase {
             (nil, "google", challenge),
             (URL(string: "http://www.asastats.com"), "google", challenge),
             (URL(string: "https:///nohost"), "google", challenge),
+            (URL(string: "https://[::1]:8443"), "google", challenge),
+            (URL(string: "https://www.asa_stats.com"), "google", challenge),
             (server, nil, challenge),
             (server, "facebook", challenge),
             (server, "google/../x", challenge),
@@ -70,6 +72,14 @@ final class WebAuthRequestTests: XCTestCase {
                 WebAuthRequest(server: url, provider: provider, challenge: value, next: nil),
                 "\(String(describing: url)) \(String(describing: provider)) \(String(describing: value))")
         }
+    }
+
+    func testAcceptsAnIPv4ServerForLocalBuilds() {
+        let request = WebAuthRequest(
+            server: URL(string: "https://192.168.1.20:8000"), provider: "google",
+            challenge: challenge, next: nil)
+
+        XCTAssertEqual(request?.callbackHost, "192.168.1.20")
     }
 
     func testProvidersMatchTheServer() {

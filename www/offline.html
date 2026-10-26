@@ -29,10 +29,6 @@
   <h1>No connection</h1>
   <p>ASA Stats needs the internet. Check your connection and try again.</p>
   <button type="button" id="retry">Retry</button>
-  <script>
-    document.getElementById("retry").addEventListener("click", function () {
-      location.href = window.ASASTATS_URL || "https://www.asastats.com";
-    });
-  </script>
+  <script src="offline.js"></script>
 </body>
 </html>

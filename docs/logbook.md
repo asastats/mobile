@@ -435,3 +435,64 @@ frontend `core/views_appauth.py` and its logbook; design and the user's answers:
 - Assumed until the first CI run: the auto-generated `AsastatsWebauth`
   scheme runs the package's tests; the Auth Tab's verification reads the
   `handle_all_urls` relation.
+
+### Correction, 2026-10-26: the start URL can no longer fail to build
+
+The first iOS CI run measured `WebAuthRequest.swift` at 98.7 % (75 of 76
+lines): the `else { return nil }` after `URL(string:)` was never reached,
+because with checked parts that URL cannot fail to parse. With one exception:
+`URL.host` returns an IPv6 address without its brackets, and
+`https://::1/...` does not parse. Both platforms now accept only DNS names and
+IPv4 addresses as the server host (tested), and iOS builds the URL with `!`,
+since nothing that passes the checks can fail. Production is
+`www.asastats.com`; a LAN build uses an IPv4 address.
+
+## jest.config.cjs, tests/, pytest.ini, requirements-dev.txt, www/offline.js, .github/workflows/tests.yml — unit tests for the shell (2026-10-26)
+
+Step 1 of `capacitor/MOBILE-TESTING.md`, approved by the user. The rule for
+every ASA Stats repository is 100 % unit coverage; until now this one had none
+of its own (the website's `app.js` is tested in `frontend/wallet`).
+
+- **Jest** covers `capacitor.config.ts` (loaded afresh per case with
+  `jest.isolateModules`, `node:fs` mocked so `www/server-url.js` is not
+  rewritten) and the offline page. Its Retry script moved from inline to
+  `www/offline.js` so Jest can load it; a test reads `offline.html` and checks
+  that it loads `server-url.js` then `offline.js` and nothing inline. No
+  `tsconfig.json`: ts-jest gets its options in `jest.config.cjs`, so the
+  Capacitor CLI's own reading of `capacitor.config.ts` is untouched.
+- **pytest** covers both icon scripts against temporary trees (the module
+  paths are monkeypatched), so a test run never rewrites the committed icons.
+  `-p no:django`: the shared backend venv carries pytest-django, which would
+  look for a Django project here.
+- **Not unit-tested, on purpose:** `AppDelegate.swift`, `SceneDelegate.swift`
+  and `MainActivity.java` are Capacitor's template plus three lines forwarding
+  push callbacks. A unit test needs an XCTest target added to
+  `project.pbxproj`, which cannot be built or checked without a Mac; the
+  Appium suite exercises them on a device (push registration, a tapped
+  notification). Raised with the user on 2026-10-26.
+
+## functional_tests/, .github/workflows/functional.yml — Appium on an Android emulator (2026-10-26)
+
+Step 3 of `capacitor/MOBILE-TESTING.md`, first part. Appium 3.8.0 with the
+UiAutomator2 driver 8.7.0 and Appium-Python-Client 6.0.9, pytest, on an
+API 34 `google_apis` x86_64 emulator (`reactivecircus/android-emulator-runner`,
+KVM enabled). The debug APK loads the **live site**, so these tests are
+read-only and need no account: app mode and the user-agent token,
+`window.ASAStatsApp`, an external link leaving for the browser and Back
+returning, the Android back button walking history, a deep link opening the
+page, and offline → `offline.html` → Retry.
+
+- **The WebView is reached through chromedriver**, which must match the
+  emulator's WebView version; Appium downloads it
+  (`--allow-insecure=uiautomator2:chromedriver_autodownload`, Appium 3's
+  driver-scoped spelling). Capacitor debug builds allow WebView debugging,
+  which this needs; a release build would not.
+- **Not here yet:** anything needing an account (push permission and the
+  alerts modal, downloads to the share sheet, F4 with a provider stand-in)
+  needs a test server with known users. That is the functional run against a
+  Django server started in CI, still to build. iOS (XCUITest driver on a
+  simulator) follows once the iOS build signs.
+- Its own `pytest.ini`: the root one measures `scripts/` coverage and would
+  fail this run at 0 %.
+- Not run locally (no emulator on the Raspberry Pi); the client API and test
+  collection were checked in a throwaway venv on 2026-10-26.

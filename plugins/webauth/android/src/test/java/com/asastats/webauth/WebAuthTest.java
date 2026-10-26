@@ -40,6 +40,12 @@ public class WebAuthTest {
     }
 
     @Test
+    public void acceptsAnIpv4ServerForLocalBuilds() {
+        assertEquals("192.168.1.20",
+            WebAuthRequest.create("https://192.168.1.20:8000", "google", CHALLENGE, null).callbackHost);
+    }
+
+    @Test
     public void encodesNonAsciiAsUtf8() {
         assertEquals("/a%C3%A9%20b", WebAuthRequest.encoded("/aé b"));
     }
@@ -51,6 +57,7 @@ public class WebAuthTest {
             {"http://www.asastats.com", "google", CHALLENGE},
             {"https:///nohost", "google", CHALLENGE},
             {"https://bad host", "google", CHALLENGE},
+            {"https://[::1]:8443", "google", CHALLENGE},
             {SERVER, null, CHALLENGE},
             {SERVER, "facebook", CHALLENGE},
             {SERVER, "google/../x", CHALLENGE},

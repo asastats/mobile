@@ -19,9 +19,11 @@ public struct WebAuthRequest {
     public let startURL: URL
     public let callbackHost: String
 
-    /// - Returns: nil unless the server is https and every value is well formed.
+    /// - Returns: nil unless the server is https on a DNS name or IPv4 address and
+    ///   every value is well formed.
     public init?(server: URL?, provider: String?, challenge: String?, next: String?) {
-        guard let server = server, server.scheme == "https", let host = server.host,
+        guard let server = server, server.scheme == "https",
+              let host = server.host, WebAuthRequest.isHost(host),
               let provider = provider, WebAuthRequest.providers.contains(provider),
               let challenge = challenge, WebAuthRequest.isChallenge(challenge)
         else { return nil }
@@ -31,10 +33,8 @@ public struct WebAuthRequest {
             query += "&next=\(WebAuthRequest.encoded(next))"
         }
         let port = server.port.map { ":\($0)" } ?? ""
-        guard let url = URL(string: "https://\(host)\(port)/app/auth/start/\(provider)/?\(query)")
-        else { return nil }
-
-        startURL = url
+        // Every part is checked or encoded above, so this always parses.
+        startURL = URL(string: "https://\(host)\(port)/app/auth/start/\(provider)/?\(query)")!
         callbackHost = host
     }
 
@@ -54,6 +54,11 @@ public struct WebAuthRequest {
             && value.unicodeScalars.allSatisfy { base64url.contains($0) }
     }
 
+    /// Letters, digits, dots and hyphens; an IPv6 host comes without its brackets.
+    static func isHost(_ value: String) -> Bool {
+        !value.isEmpty && value.unicodeScalars.allSatisfy { hostCharacters.contains($0) }
+    }
+
     /// Percent-encode everything but unreserved characters and `/`.
     static func encoded(_ value: String) -> String {
         value.addingPercentEncoding(withAllowedCharacters: safe) ?? ""
@@ -63,6 +68,9 @@ public struct WebAuthRequest {
         charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
     )
     private static let safe = base64url.union(CharacterSet(charactersIn: ".~/"))
+    private static let hostCharacters = CharacterSet(
+        charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-"
+    )
 }
 
 /// Opens the system sheet; the real one is `SystemAuthSession`, tests use a fake.

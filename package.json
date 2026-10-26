@@ -6,7 +6,8 @@
   "scripts": {
     "sync": "cap sync",
     "sync:android": "cap sync android",
-    "sync:ios": "cap sync ios"
+    "sync:ios": "cap sync ios",
+    "test": "jest --config jest.config.cjs --coverage"
   },
   "author": "Ivica Paleka",
   "license": "UNLICENSED",
@@ -28,6 +29,10 @@
   },
   "devDependencies": {
     "@capacitor/cli": "8.5.3",
+    "@types/jest": "^29.5.14",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "ts-jest": "^29.4.5",
     "typescript": "^5.9.3"
   },
   "private": true

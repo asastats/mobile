@@ -1,0 +1,3 @@
+# Appium's Python client extends Selenium's; CI: .github/workflows/functional.yml.
+Appium-Python-Client==6.0.9
+pytest==9.1.1

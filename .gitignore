@@ -24,3 +24,9 @@ android/keystore.properties
 # Firebase config (environment-specific, supplied in CI)
 google-services.json
 GoogleService-Info.plist
+
+# Test outputs
+.coverage
+__pycache__/
+coverage/
+functional_tests/appium.log

@@ -21,6 +21,8 @@ public final class WebAuthRequest {
     public static final String CALLBACK_PATH = "/app/auth/return/";
 
     private static final Pattern CHALLENGE = Pattern.compile("^[A-Za-z0-9_-]{43}$");
+    /** A DNS name or IPv4 address; an IPv6 host keeps its brackets in {@link URI#getHost}. */
+    private static final Pattern HOST = Pattern.compile("^[A-Za-z0-9.-]+$");
     private static final String UNRESERVED =
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~/";
 
@@ -33,7 +35,8 @@ public final class WebAuthRequest {
     }
 
     /**
-     * @return null unless the server is https and every value is well formed.
+     * @return null unless the server is https on a DNS name or IPv4 address and every
+     *     value is well formed.
      */
     public static WebAuthRequest create(String server, String provider, String challenge, String next) {
         if (server == null || provider == null || !PROVIDERS.contains(provider)) return null;
@@ -45,6 +48,7 @@ public final class WebAuthRequest {
             return null;
         }
         if (!"https".equals(uri.getScheme()) || uri.getHost() == null) return null;
+        if (!HOST.matcher(uri.getHost()).matches()) return null;
 
         String port = uri.getPort() == -1 ? "" : ":" + uri.getPort();
         StringBuilder url = new StringBuilder("https://")
