@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 from appium import webdriver
+from appium.common.exceptions import NoSuchContextException
 from appium.options.android import UiAutomator2Options
 from selenium.webdriver.support.ui import WebDriverWait
 
@@ -24,6 +25,55 @@ TIMEOUT = 60
 USER = os.environ.get("APP_TEST_USER", "apptester")
 PASSWORD = os.environ.get("APP_TEST_PASSWORD", "app-tester-pw-1")
 DATABASE_URL = os.environ.get("ASASTATS_DB_URL", "")
+#: Uploaded by functional.yml when a job fails.
+FAILURES = Path(__file__).resolve().parent / "failures"
+
+
+@pytest.hookimpl(wrapper=True)
+def pytest_runtest_makereport(item, call):
+    report = yield
+    if report.when == "call" and report.failed and "driver" in item.funcargs:
+        save_evidence(item.funcargs["driver"], FAILURES / item.name)
+    return report
+
+
+def save_evidence(driver, folder):
+    """Save what the phone showed: screenshot, contexts, the page, logcat."""
+    folder.mkdir(parents=True, exist_ok=True)
+    notes = []
+    for name, read in (
+        ("context", lambda: driver.current_context),
+        ("contexts", lambda: driver.contexts),
+        ("package", lambda: driver.current_package),
+        ("activity", lambda: driver.current_activity),
+    ):
+        try:
+            notes.append(f"{name}: {read()}")
+        except Exception as error:  # noqa: BLE001 - evidence, never a second failure
+            notes.append(f"{name}: {error!r}")
+    for context in [c for c in _contexts(driver) if c.startswith("WEBVIEW")]:
+        try:
+            driver.switch_to.context(context)
+            notes.append(f"{context} url: {driver.current_url}")
+            (folder / f"{context}.html").write_text(driver.page_source)
+        except Exception as error:  # noqa: BLE001
+            notes.append(f"{context}: {error!r}")
+    try:
+        native(driver)
+        driver.get_screenshot_as_file(str(folder / "screen.png"))
+        (folder / "native.xml").write_text(driver.page_source)
+        logcat = driver.get_log("logcat")
+        (folder / "logcat.txt").write_text("\n".join(entry["message"] for entry in logcat))
+    except Exception as error:  # noqa: BLE001
+        notes.append(f"native: {error!r}")
+    (folder / "notes.txt").write_text("\n".join(notes) + "\n")
+
+
+def _contexts(driver):
+    try:
+        return driver.contexts
+    except Exception:  # noqa: BLE001
+        return []
 
 
 @pytest.fixture
@@ -46,9 +96,21 @@ def wait(driver, predicate, timeout=TIMEOUT):
 
 
 def webview(driver):
-    """Switch to the app's WebView, once it exists."""
-    name = wait(driver, lambda d: next((c for c in d.contexts if c.startswith("WEBVIEW")), None))
-    driver.switch_to.context(name)
+    """Switch to the app's own WebView, once it exists and accepts the switch."""
+
+    def switched(d):
+        names = [c for c in d.contexts if c.startswith("WEBVIEW")]
+        # the app's own first: a browser opened from it lists one too
+        names.sort(key=lambda c: c != f"WEBVIEW_{PACKAGE}")
+        if not names:
+            return False
+        try:
+            d.switch_to.context(names[0])
+        except NoSuchContextException:
+            return False  # listed a moment before it can be attached
+        return True
+
+    wait(driver, switched)
 
 
 def native(driver):

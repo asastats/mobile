@@ -1,6 +1,7 @@
 """The shell around the live site, on an emulator, read-only against production."""
 
 import pytest
+from selenium.common.exceptions import WebDriverException
 
 from conftest import PACKAGE, SITE, VERSION, native, site_loaded, wait, webview
 
@@ -40,6 +41,7 @@ def test_external_links_open_in_the_browser(driver):
 
 def test_the_back_button_goes_back_in_history(driver):
     site_loaded(driver)
+    start = driver.current_url
     driver.execute_script(f"window.location.assign('{SITE}/faq/');")
     wait(driver, lambda d: d.current_url.endswith("/faq/"))
 
@@ -47,17 +49,20 @@ def test_the_back_button_goes_back_in_history(driver):
     driver.back()
 
     webview(driver)
-    wait(driver, lambda d: d.current_url.rstrip("/") == SITE)
+    wait(driver, lambda d: d.current_url == start)
 
 
 def test_a_link_to_the_site_opens_in_the_app(driver):
     site_loaded(driver)
+    driver.execute_script(f"window.location.assign('{SITE}/faq/');")
+    wait(driver, lambda d: d.current_url.endswith("/faq/"))
     native(driver)
 
-    driver.execute_script("mobile: deepLink", {"url": f"{SITE}/faq/", "package": PACKAGE})
+    # A path the App Links filter covers (AndroidManifest.xml); /faq/ is not one.
+    driver.execute_script("mobile: deepLink", {"url": f"{SITE}/", "package": PACKAGE})
 
     webview(driver)
-    wait(driver, lambda d: d.current_url.endswith("/faq/"))
+    wait(driver, lambda d: d.current_url == f"{SITE}/")
 
 
 def test_offline_shows_retry_and_retry_comes_back(driver):
@@ -73,6 +78,19 @@ def test_offline_shows_retry_and_retry_comes_back(driver):
         native(driver)
         driver.execute_script("mobile: setConnectivity", {"wifi": True, "data": True})
 
+    # The emulator takes a few seconds to come back online: Retry until it does.
     webview(driver)
-    driver.execute_script("document.getElementById('retry').click();")
+    wait(driver, retried)
     site_loaded(driver)
+
+
+def retried(driver):
+    """Click Retry if the offline page is still up; true once the site is back."""
+    try:
+        return driver.execute_script(
+            "var retry = document.getElementById('retry');"
+            "if (retry) { retry.click(); return false; }"
+            "return document.documentElement.classList.contains('in-app');"
+        )
+    except WebDriverException:
+        return False  # the click navigated while the script ran

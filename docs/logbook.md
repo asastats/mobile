@@ -607,3 +607,29 @@ uses (.NET, GHC, CodeQL, boost, the Android NDK; Gradle has already built the
 APK by then) and prints `df` before and after. The Postgres health check now
 passes `-U postgres`: without it every probe logged `role "root" does not
 exist` (harmless, but it buried the real error).
+
+### `functional_tests/`: the first run on a booted emulator (2026-10-26)
+
+With the disk freed, both emulators booted and Appium ran. Live: 1 passed,
+5 failed. Local: all 5 failed at the first `site_loaded` (the start page on
+the CI server never had `in-app` within 60 s). Nothing recorded what the
+screen showed, so the cause of the local failures is still unknown (cleartext
+was checked: an http `ASASTATS_URL` sync does write `usesCleartextTraffic`).
+What the live log did show, and the changes:
+
+- `NoSuchContextError` right after a context was listed (second session on
+  the same emulator). `webview()` now prefers `WEBVIEW_<package>`, since a
+  Custom Tab lists its own WebView, and retries the switch.
+- The deep-link test used `/faq/`. The App Links filter covers neither it nor
+  any `/<word>/` page (`/[^/]+` has no trailing slash), so Android could not
+  resolve the intent. The test now links `/`. **Open question for the user:
+  should `/faq/` and the other single-segment pages open in the app?**
+- The back-button test compared with `SITE` itself; it now compares with the
+  URL the app started on.
+- The offline test clicked Retry once, before the emulator was back online.
+  It now retries until the site is back.
+- The external-link test left the app, but Back did not return to it. The
+  cause is unknown (perhaps Chrome's first-run screen); the evidence below
+  will show it.
+- On every failure a hook saves `failures/<test>/` (screenshot, native XML,
+  contexts, each WebView's URL and HTML, logcat), and both jobs upload it.

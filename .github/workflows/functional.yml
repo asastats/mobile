@@ -120,7 +120,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: appium-log-live
-          path: functional_tests/appium.log
+          path: |
+            functional_tests/appium.log
+            functional_tests/failures/
 
   local:
     runs-on: ubuntu-latest
@@ -308,4 +310,5 @@ jobs:
           name: logs-local
           path: |
             functional_tests/appium.log
+            functional_tests/failures/
             runserver.log
