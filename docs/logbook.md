@@ -370,3 +370,68 @@ The suffix stays. The debug package is registered as a second Android app in
 the same Firebase project, so one `google-services.json` lists both, and the
 debug APK used for testing receives push too. Release builds are unaffected.
 The steps are USER-ACTIONS U5 step 7 in the planning repo.
+
+## package.json — no third-party plugin for the WebAuth sheet (A6, 2026-10-26)
+
+HANDOFF A6 asked to look for a maintained Capacitor 8 plugin with SPM
+support that opens ASWebAuthenticationSession / Custom Tabs and returns the
+callback URL, before writing a local `WebAuth` plugin. None fits:
+
+- `@capgo/inappbrowser` has `openSecureWindow` (Capacitor 8, `Package.swift`),
+  but registering it also hands every page of www.asastats.com
+  `executeScript`, `getCookies`, request proxying and camera/microphone grants.
+  The shell loads the live site, so any plugin's whole surface is the site's
+  (HANDOFF §3). Rejected.
+- `@capgo/capacitor-social-login`: native provider SDKs, and its generic OAuth
+  mode on Android runs in an embedded WebView (their issue #442), which Google
+  refuses. Rejected.
+- `@capacitor/browser` and the official InAppBrowser open SFSafariViewController
+  / a Custom Tab with no callback. Not enough.
+
+So the plugin is local, one method, as planned. Android uses
+`androidx.browser` 1.9's Auth Tab (`AuthTabIntent`, Chrome 137+), which
+returns the redirect to the launching activity, and falls back to a plain
+Custom Tab plus the `com.asastats.app` intent filter when
+`isAuthTabSupported()` is false. Design: `capacitor/F4-DESIGN.md`, awaiting
+the user's approval; nothing is built yet.
+
+## plugins/webauth/, package.json, ios/App/App/App.entitlements, .github/workflows — the WebAuth plugin (F4, 2026-10-26)
+
+The system-browser sign-in sheet for F4. Server half and the threat model:
+frontend `core/views_appauth.py` and its logbook; design and the user's answers:
+`capacitor/F4-DESIGN.md` §9.
+
+- **A local npm package (`file:plugins/webauth`), not code in the app
+  target.** `npx cap sync` then wires it like any plugin: a gradle module on
+  Android, a Swift package in `CapApp-SPM` on iOS, and registration in
+  both generated plugin lists. Code inside `ios/App/App/` would have needed
+  hand edits to `project.pbxproj` and a bridge view controller subclass.
+- **Java, not Kotlin**: `MainActivity` is Java, and Kotlin would add a gradle
+  plugin for ~150 lines.
+- **Nothing from JavaScript reaches a URL unchecked.** Every page of
+  www.asastats.com can call the plugin (HANDOFF §3), so it takes only
+  `provider`, `challenge` and `next`; it builds the start URL from the
+  configured `server.url`, refuses unknown providers and malformed
+  challenges, and keeps the callback host and path to itself. One sign-in at
+  a time.
+- **https callback only** (user's answer Q5 = a): iOS 17.4+
+  `ASWebAuthenticationSession` with `.https(host:path:)`, which needs the
+  `webcredentials:` entitlement added here and the AASA `webcredentials`
+  entry the frontend serves; Android Chrome 137+ Auth Tab with an https
+  redirect, verified against `assetlinks.json`. Older systems get
+  `unsupported` and `signIn.ts` says so; there is no custom-scheme fallback.
+- **iOS uses an ephemeral session**, Android's Auth Tab cannot, which is why
+  the server's `start` logs Chrome's session out.
+- **Debug builds cannot complete it**: `com.asastats.app.debug` and a dev
+  `server.url` are in no AASA or asset links document. Test F4 on the
+  TestFlight / Play internal builds.
+- **Tests**: the logic (`WebAuthRequest`, `WebAuthController`) is plain code
+  behind a fake session/launcher. XCTest and JUnit, 100 % gates in CI
+  (`jacocoCoverageCheck`, and an `xccov` check on `WebAuthRequest.swift`).
+  The Capacitor and OS glue (`WebAuthPlugin`, `SystemAuthSession`) can only
+  run on a device: the Appium suite in `capacitor/MOBILE-TESTING.md`.
+  JUnit was run locally on 2026-10-26 without the Android SDK (14 passed,
+  100 % lines and branches with JaCoCo 0.8.12); nothing native was built.
+- Assumed until the first CI run: the auto-generated `AsastatsWebauth`
+  scheme runs the package's tests; the Auth Tab's verification reads the
+  `handle_all_urls` relation.

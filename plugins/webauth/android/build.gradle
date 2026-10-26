@@ -1,0 +1,74 @@
+ext {
+    junitVersion = project.hasProperty('junitVersion') ? rootProject.ext.junitVersion : '4.13.2'
+    androidxAppCompatVersion = project.hasProperty('androidxAppCompatVersion') ? rootProject.ext.androidxAppCompatVersion : '1.7.1'
+    // Auth Tab (AuthTabIntent, CustomTabsClient.isAuthTabSupported) arrived in 1.9.0.
+    androidxBrowserVersion = project.hasProperty('androidxBrowserVersion') ? rootProject.ext.androidxBrowserVersion : '1.9.0'
+}
+
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.13.0'
+    }
+}
+
+apply plugin: 'com.android.library'
+apply plugin: 'jacoco'
+
+android {
+    namespace = "com.asastats.webauth"
+    compileSdk = project.hasProperty('compileSdkVersion') ? rootProject.ext.compileSdkVersion : 36
+    defaultConfig {
+        minSdkVersion project.hasProperty('minSdkVersion') ? rootProject.ext.minSdkVersion : 24
+        targetSdkVersion project.hasProperty('targetSdkVersion') ? rootProject.ext.targetSdkVersion : 36
+        versionCode 1
+        versionName "1.0"
+    }
+    buildTypes {
+        debug {
+            enableUnitTestCoverage = true
+        }
+        release {
+            minifyEnabled false
+        }
+    }
+    lintOptions {
+        abortOnError = false
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+    }
+}
+
+repositories {
+    google()
+    mavenCentral()
+}
+
+dependencies {
+    implementation project(':capacitor-android')
+    implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+    implementation "androidx.browser:browser:$androidxBrowserVersion"
+    testImplementation "junit:junit:$junitVersion"
+}
+
+// WebAuthPlugin only adapts Capacitor and the Auth Tab; its logic is in the two
+// classes checked here, and the flow on a device is the Appium suite's.
+tasks.register('jacocoCoverageCheck', JacocoCoverageVerification) {
+    dependsOn 'testDebugUnitTest'
+    executionData.from = fileTree(buildDir) { include '**/testDebugUnitTest.exec' }
+    sourceDirectories.from = files('src/main/java')
+    classDirectories.from = fileTree("$buildDir/intermediates/javac/debug") {
+        include '**/WebAuthRequest*.class', '**/WebAuthController*.class'
+    }
+    violationRules {
+        rule {
+            limit { counter = 'LINE'; minimum = 1.0 }
+            limit { counter = 'BRANCH'; minimum = 1.0 }
+        }
+    }
+}

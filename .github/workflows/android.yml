@@ -39,6 +39,10 @@ jobs:
           fi
           echo "$GOOGLE_SERVICES_JSON_BASE64" | base64 -d > android/app/google-services.json
 
+      - name: WebAuth plugin tests, 100 % coverage of its logic
+        working-directory: android
+        run: ./gradlew --no-daemon :asastats-webauth:jacocoCoverageCheck
+
       - name: Debug APK (sideload)
         working-directory: android
         run: ./gradlew --no-daemon assembleDebug

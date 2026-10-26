@@ -1,0 +1,22 @@
+{
+  "name": "asastats-webauth",
+  "version": "1.0.0",
+  "description": "ASA Stats app: social sign-in in the system browser with an OS-verified https callback",
+  "private": true,
+  "license": "UNLICENSED",
+  "files": [
+    "android/src/main/",
+    "android/build.gradle",
+    "ios/Sources",
+    "ios/Tests",
+    "Package.swift"
+  ],
+  "capacitor": {
+    "ios": {
+      "src": "ios"
+    },
+    "android": {
+      "src": "android"
+    }
+  }
+}
