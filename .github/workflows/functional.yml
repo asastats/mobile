@@ -63,12 +63,43 @@ jobs:
           appium driver install uiautomator2@8.7.0
           python -m pip install -r functional_tests/requirements.txt
 
+      # A cold API 34 boot outran the default timeout (2026-10-26): a cached AVD
+      # with a boot snapshot, as the runner's README recommends.
+      - name: AVD cache
+        uses: actions/cache@v4
+        id: avd-cache
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-34-google_apis-x86_64
+
+      - name: AVD snapshot
+        if: steps.avd-cache.outputs.cache-hit != 'true'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          ram-size: 4096M
+          cores: 4
+          force-avd-creation: false
+          emulator-boot-timeout: 900
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: false
+          script: echo "AVD snapshot generated"
+
       - name: Run on the emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34
           target: google_apis
           arch: x86_64
+          ram-size: 4096M
+          cores: 4
+          force-avd-creation: false
+          emulator-boot-timeout: 900
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           script: bash functional_tests/run-android.sh live
 
@@ -202,6 +233,32 @@ jobs:
           npm install -g appium@3.8.0
           appium driver install uiautomator2@8.7.0
 
+      # A cold API 34 boot outran the default timeout (2026-10-26): a cached AVD
+      # with a boot snapshot, as the runner's README recommends.
+      - name: AVD cache
+        uses: actions/cache@v4
+        id: avd-cache
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-34-google_apis-x86_64
+
+      - name: AVD snapshot
+        if: steps.avd-cache.outputs.cache-hit != 'true'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          ram-size: 4096M
+          cores: 4
+          force-avd-creation: false
+          emulator-boot-timeout: 900
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: false
+          script: echo "AVD snapshot generated"
+
       - name: Run on the emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -209,6 +266,11 @@ jobs:
           api-level: 34
           target: google_apis
           arch: x86_64
+          ram-size: 4096M
+          cores: 4
+          force-avd-creation: false
+          emulator-boot-timeout: 900
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           script: bash functional_tests/run-android.sh local
 

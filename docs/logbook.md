@@ -526,3 +526,22 @@ need the engine), a notification arriving.
 
 The live and local runs share `functional_tests/` and differ by pytest marker
 (`run-android.sh live|local`), because the server URL is baked into the APK.
+
+### 2026-10-26: the first emulator run timed out booting
+
+The first `Functional (Android)` run (live job, before 3b) failed with
+"Timeout waiting for emulator to boot" on a cold API 34 `google_apis` image.
+Both jobs now follow the runner's README: a cached AVD (`actions/cache`,
+key `avd-34-google_apis-x86_64`) whose boot snapshot is made once, then
+reused with `-no-snapshot-save`; `emulator-boot-timeout: 900`, 4 GB RAM,
+4 cores, no window, audio, boot animation or back camera. If it still times
+out, the next lever is an older image (API 31 boots faster); the push test
+needs `google_apis` either way.
+
+## .github/workflows/ios.yml — the coverage step names the uncovered lines (2026-10-26)
+
+The second iOS run still failed the 100 % gate on `WebAuthRequest.swift`
+after the IPv6 change, and the log carried only a percentage, so the missing
+line had to be guessed from source (the guess fixed one line and not the
+other). On failure the step now prints `xccov view --archive --file` for the
+file: every line with its execution count.

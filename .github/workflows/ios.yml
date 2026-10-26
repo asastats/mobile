@@ -62,15 +62,21 @@ jobs:
 
       - name: WebAuth plugin coverage, 100 % of its logic
         run: |
-          xcrun xccov view --report --json "$RUNNER_TEMP/webauth.xcresult" | python3 -c "
+          RESULT="$RUNNER_TEMP/webauth.xcresult"
+          FILE=$(xcrun xccov view --report --json "$RESULT" | python3 -c "
           import json, sys
           files = [f for t in json.load(sys.stdin)['targets'] for f in t['files']]
           logic = [f for f in files if f['name'] == 'WebAuthRequest.swift']
           assert logic, 'WebAuthRequest.swift not in the coverage report'
-          for f in logic:
-              print(f['name'], f['lineCoverage'])
-              assert f['lineCoverage'] == 1.0, 'below 100 %'
-          "
+          print(logic[0]['lineCoverage'] == 1, logic[0]['lineCoverage'], logic[0]['path'])
+          ")
+          read -r FULL COVERAGE SOURCE <<< "$FILE"
+          echo "WebAuthRequest.swift: line coverage $COVERAGE"
+          if [ "$FULL" != "True" ]; then
+            # Every line with its execution count; the 0s are the ones to cover.
+            xcrun xccov view --archive --file "$SOURCE" "$RESULT"
+            exit 1
+          fi
 
       - name: Simulator build
         if: ${{ !steps.signing.outputs.key }}
