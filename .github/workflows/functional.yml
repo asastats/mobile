@@ -67,6 +67,14 @@ jobs:
           appium driver install uiautomator2@8.7.0
           python -m pip install -r functional_tests/requirements.txt
 
+      # The AVD's userdata partition needs ~7.4 GB; the runner had 4-6 GB free.
+      - name: Free disk space
+        run: |
+          df -h /
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL \
+            /usr/local/lib/android/sdk/ndk /usr/local/share/boost
+          df -h /
+
       # A cold API 34 boot outran the default timeout (2026-10-26): a cached AVD
       # with a boot snapshot, as the runner's README recommends.
       - name: AVD cache
@@ -135,7 +143,7 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: website_db
         options: >-
-          --health-cmd pg_isready
+          --health-cmd "pg_isready -U postgres"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -243,6 +251,14 @@ jobs:
         run: |
           npm install -g appium@3.8.0
           appium driver install uiautomator2@8.7.0
+
+      # The AVD's userdata partition needs ~7.4 GB; the runner had 4-6 GB free.
+      - name: Free disk space
+        run: |
+          df -h /
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL \
+            /usr/local/lib/android/sdk/ndk /usr/local/share/boost
+          df -h /
 
       # A cold API 34 boot outran the default timeout (2026-10-26): a cached AVD
       # with a boot snapshot, as the runner's README recommends.

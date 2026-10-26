@@ -11,8 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # the build number counts commits
 
       - uses: actions/setup-node@v4
         with:
@@ -25,10 +23,12 @@ jobs:
           java-version: 21
           cache: gradle
 
-      # One number per commit on both platforms: package.json's base + commits.
+      # One number per commit on both platforms: base + minutes from buildEpoch to the commit.
       - name: Build number
         run: |
-          NUMBER=$(( $(node -p 'require("./package.json").buildNumber') + $(git rev-list --count HEAD) ))
+          NUMBER=$(node -p 'const { buildNumber, buildEpoch } = require("./package.json");
+            buildNumber + Math.floor((process.argv[1] * 1000 - Date.parse(buildEpoch)) / 60000)' \
+            "$(git log -1 --format=%ct)")
           echo "Build number $NUMBER"
           echo "ASASTATS_BUILD_NUMBER=$NUMBER" >> "$GITHUB_ENV"
 

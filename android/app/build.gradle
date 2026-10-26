@@ -11,7 +11,7 @@ android {
         applicationId "com.asastats.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        // CI sets ASASTATS_BUILD_NUMBER (base + commit count); see docs/logbook.md.
+        // CI sets ASASTATS_BUILD_NUMBER (base + minutes since buildEpoch); see docs/logbook.md.
         versionCode = (System.getenv('ASASTATS_BUILD_NUMBER') ?: pkg.buildNumber) as int
         versionName pkg.version
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"

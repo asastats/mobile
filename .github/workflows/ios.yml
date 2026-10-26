@@ -12,8 +12,6 @@ jobs:
     runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # the build number counts commits
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
@@ -24,10 +22,12 @@ jobs:
           node-version: 22
           cache: npm
 
-      # One number per commit on both platforms: package.json's base + commits.
+      # One number per commit on both platforms: base + minutes from buildEpoch to the commit.
       - name: Build number
         run: |
-          NUMBER=$(( $(node -p 'require("./package.json").buildNumber') + $(git rev-list --count HEAD) ))
+          NUMBER=$(node -p 'const { buildNumber, buildEpoch } = require("./package.json");
+            buildNumber + Math.floor((process.argv[1] * 1000 - Date.parse(buildEpoch)) / 60000)' \
+            "$(git log -1 --format=%ct)")
           echo "Build number $NUMBER"
           echo "ASASTATS_BUILD_NUMBER=$NUMBER" >> "$GITHUB_ENV"
 

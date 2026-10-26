@@ -2,6 +2,7 @@
   "name": "asastats-mobile",
   "version": "1.1.0",
   "buildNumber": 110000,
+  "buildEpoch": "2026-10-26T00:00:00Z",
   "description": "ASA Stats app: a Capacitor shell around www.asastats.com",
   "scripts": {
     "sync": "cap sync",

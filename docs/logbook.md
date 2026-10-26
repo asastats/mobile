@@ -581,3 +581,29 @@ followed by `as int` on the call's `null` result ("Value is null" in the
 release build, "Cannot cast object 'null' … to class 'int'" in the debug
 APKs of both functional jobs). The assignment form cannot be read as a call.
 The build-number step now also prints the number.
+
+### Correction, 2026-10-26: the build number counts minutes, not commits
+
+The commit count did not work: GitHub's `main` is not this clone's history
+(the user syncs with Meld and commits there), and its count came back to 10,
+so the next TestFlight upload failed: "The bundle version must be higher than
+the previously uploaded version: '110010'". CI now uses `buildNumber` +
+whole minutes from `package.json`'s `buildEpoch` (2026-10-26T00:00Z) to the
+commit's committer time (`git log -1 --format=%ct`). It rises with every new or
+amended commit whatever happens to the history, is the same for both
+platforms, needs no full-history checkout, and works on the macOS runner (node,
+not GNU `date -d`). Android's `versionCode` limit (2,100,000,000) is
+thousands of years away. The "raise the base by 1000 per version" rule from
+the entry above is dropped: the number just keeps growing across versions.
+Never move `buildEpoch` later or lower `buildNumber`.
+
+### `.github/workflows/functional.yml`: free disk before the emulator (2026-10-26)
+
+The emulator never booted because it exited at once: "FATAL | Not enough
+space to create userdata partition. Available: 6060.09 MB … need 7372.80 MB"
+(4289 MB in the `local` job, which also has the website and Postgres). KVM was
+fine. A step before the AVD cache deletes preinstalled toolchains nothing here
+uses (.NET, GHC, CodeQL, boost, the Android NDK; Gradle has already built the
+APK by then) and prints `df` before and after. The Postgres health check now
+passes `-U postgres`: without it every probe logged `role "root" does not
+exist` (harmless, but it buried the real error).

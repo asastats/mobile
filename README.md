@@ -79,6 +79,8 @@ notification shade is `notification_accent` in `res/values/colors.xml`.
 there.
 
 - `version`: the store version, `1.1.0`.
-- `buildNumber`: one integer for both platforms (Android `versionCode`, iOS
-  `CFBundleVersion`). It starts at 110000 for 1.1.0 and goes up by one for
-  **every upload** to either store. The stores reject a number they have seen.
+- `buildNumber` and `buildEpoch`: local builds use `buildNumber` (110000). CI
+  uses `buildNumber` + the minutes from `buildEpoch` to the commit's time, the
+  same on both platforms (Android `versionCode`, iOS `CFBundleVersion`). Never
+  lower either value: the stores reject a number they have seen. Re-running a
+  workflow for a commit that already uploaded fails; push a new commit.
