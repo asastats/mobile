@@ -12,6 +12,8 @@ jobs:
     runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # the build number counts commits
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
@@ -21,6 +23,13 @@ jobs:
         with:
           node-version: 22
           cache: npm
+
+      # One number per commit on both platforms: package.json's base + commits.
+      - name: Build number
+        run: |
+          NUMBER=$(( $(node -p 'require("./package.json").buildNumber') + $(git rev-list --count HEAD) ))
+          echo "Build number $NUMBER"
+          echo "ASASTATS_BUILD_NUMBER=$NUMBER" >> "$GITHUB_ENV"
 
       - run: npm ci
       - run: npx cap sync ios
@@ -100,7 +109,7 @@ jobs:
             -authenticationKeyID "$ASC_KEY_ID" \
             -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
             MARKETING_VERSION="$(node -p 'require("./package.json").version')" \
-            CURRENT_PROJECT_VERSION="$(node -p 'require("./package.json").buildNumber')" \
+            CURRENT_PROJECT_VERSION="$ASASTATS_BUILD_NUMBER" \
             archive
 
       - name: Export and upload to TestFlight

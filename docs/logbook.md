@@ -557,3 +557,27 @@ itself, the same algorithm as the Android `WebAuthRequest.encoded`, so there
 is no optional left; a test pins `/aé b` → `/a%C3%A9%20b` on both platforms.
 When the gate fails again, read the bracketed `(column, count, length)`
 regions under each line, not only the line counts.
+
+### Correction, 2026-10-26: CI derives the build number from the commit count
+
+The plan was one integer for both platforms, raised by one for every upload
+by hand. Nobody raised it, and the second TestFlight upload failed: "The bundle
+version must be higher than the previously uploaded version: '110000'" (Play's
+internal release had also used 110000). Both store workflows now compute
+`ASASTATS_BUILD_NUMBER = package.json buildNumber + git rev-list --count HEAD`
+(a full-history checkout), and pass it to `CURRENT_PROJECT_VERSION` and to
+Gradle's `versionCode`. The same commit gets the same number on both
+platforms, each new commit a higher one; local builds keep the base. Two
+consequences: re-running a workflow for a commit that already uploaded cannot
+upload again (push a new commit), and a new version raises the base by 1000
+(1.1.1 → 111000) so it stays above every 1.1.0 build. The count is GitHub's
+`main`, which the user pushes after syncing, not this local clone's.
+
+### Correction, 2026-10-26: `versionCode = (…) as int`, not `versionCode (…) as int`
+
+The first build-number change broke every Android build, debug included:
+Groovy read `versionCode (expr) as int` as the call `versionCode(expr)`
+followed by `as int` on the call's `null` result ("Value is null" in the
+release build, "Cannot cast object 'null' … to class 'int'" in the debug
+APKs of both functional jobs). The assignment form cannot be read as a call.
+The build-number step now also prints the number.
