@@ -59,15 +59,20 @@ public struct WebAuthRequest {
         !value.isEmpty && value.unicodeScalars.allSatisfy { hostCharacters.contains($0) }
     }
 
-    /// Percent-encode everything but unreserved characters and `/`.
+    /// Percent-encode everything but unreserved characters and `/`, as UTF-8
+    /// (the same bytes as the Android plugin's `encoded`).
     static func encoded(_ value: String) -> String {
-        value.addingPercentEncoding(withAllowedCharacters: safe) ?? ""
+        value.utf8.map { byte in
+            safeBytes.contains(byte) ? String(Character(UnicodeScalar(byte))) : String(format: "%%%02X", byte)
+        }.joined()
     }
 
     private static let base64url = CharacterSet(
         charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
     )
-    private static let safe = base64url.union(CharacterSet(charactersIn: ".~/"))
+    private static let safeBytes = Set(
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~/".utf8
+    )
     private static let hostCharacters = CharacterSet(
         charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-"
     )

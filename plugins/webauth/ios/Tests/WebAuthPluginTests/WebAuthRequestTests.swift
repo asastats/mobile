@@ -82,6 +82,10 @@ final class WebAuthRequestTests: XCTestCase {
         XCTAssertEqual(request?.callbackHost, "192.168.1.20")
     }
 
+    func testEncodesNonAsciiAsUtf8() {
+        XCTAssertEqual(WebAuthRequest.encoded("/aé b"), "/a%C3%A9%20b")
+    }
+
     func testProvidersMatchTheServer() {
         XCTAssertEqual(
             WebAuthRequest.providers,

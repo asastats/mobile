@@ -545,3 +545,15 @@ after the IPv6 change, and the log carried only a percentage, so the missing
 line had to be guessed from source (the guess fixed one line and not the
 other). On failure the step now prints `xccov view --archive --file` for the
 file: every line with its execution count.
+
+### 2026-10-26: the last uncovered piece was a region, not a line
+
+With the uncovered lines printed, no line had a count of 0: line coverage
+was 79 of 80 because `xccov` counts a line with an unexecuted *region* as not
+covered. The region was `?? ""` in `encoded`, the fallback for
+`addingPercentEncoding` returning nil, which only malformed UTF-16 can cause
+and a Swift `String` cannot be. `encoded` now percent-encodes the UTF-8 bytes
+itself, the same algorithm as the Android `WebAuthRequest.encoded`, so there
+is no optional left; a test pins `/aé b` → `/a%C3%A9%20b` on both platforms.
+When the gate fails again, read the bracketed `(column, count, length)`
+regions under each line, not only the line counts.

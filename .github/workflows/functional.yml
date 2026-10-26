@@ -187,6 +187,9 @@ jobs:
         run: |
           {
             echo SECRET_KEY="functional-tests-only"
+            # frontend's system check (asastats.E001) refuses to start without it;
+            # no engine runs here, so any value will do.
+            echo SIMPLE_JWT_KEY="functional-tests-only-jwt"
             echo DATABASE_NAME="website_db"
             echo DATABASE_USER="postgres"
             echo DATABASE_PASSWORD="postgres"
