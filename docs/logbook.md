@@ -633,3 +633,71 @@ What the live log did show, and the changes:
   will show it.
 - On every failure a hook saves `failures/<test>/` (screenshot, native XML,
   contexts, each WebView's URL and HTML, logcat), and both jobs upload it.
+
+### Addition, 2026-10-26: `/<word>/` pages are App Links too
+
+The user wants `/faq/` and the other single-word pages to open in the app. A
+second `pathAdvancedPattern="/[^/]+/"` covers one segment with its trailing
+slash (API 31+, like the first). It matches the bare `/accounts/`, `/api/` and
+`/static/` too, but nothing links to those. Everything deeper, including the
+OAuth callbacks under `/accounts/`, still does not match, so the F4 rule
+above holds. The Appium deep-link test is back on `/faq/` (the first run had
+failed there because the filter did not cover it).
+
+### `functional_tests/`: what the failure evidence showed (2026-10-26, third run)
+
+The saved screenshots, notes and logs explained every failure:
+
+- **Local, all five:** the app showed `offline.html` 0.7 s after "Loading app
+  at http://10.0.2.2:8000", because `GET /` answered 500:
+  `TemplateDoesNotExist: index.html`. frontend's `TEMPLATES` `DIRS` are
+  relative (`"templates"`, `"website/templates"`), and the job started
+  `runserver` from the mobile checkout's root, where neither exists. The
+  readiness check had passed only because `/accounts/login/` renders allauth's
+  own templates. The server now starts from `frontend/`, and the check asks
+  for `/`.
+- **This is S11, confirmed:** Capacitor's `BridgeWebViewClient.onReceivedHttpError`
+  loads `errorPath` for any HTTP error on a main-frame load, so a 404 or a 5xx
+  from the site shows "No connection". `WebViewListener` cannot stop it (the
+  listeners run first, then `errorPath` loads anyway).
+- **Live, back button and external link:** a "Pixel Launcher isn't
+  responding" dialog (2 cores, software GPU) took the Back press. The external
+  link had also landed on Chrome's first-run screen. `run-android.sh` now sets
+  `hide_error_dialogs` and Chrome's `--disable-fre` command line (as the debug
+  app), and Back goes through `press_back()`, which answers "Wait" first.
+- **Live, offline:** Wi-Fi was back 1 minute before the timeout, but the test
+  clicked Retry every second, and each click restarted a load that took
+  longer than that. It now clicks once per offline page.
+
+### `android/app/src/main/java/com/asastats/app/MainActivity.java`: the site's error pages (S11, 2026-10-26)
+
+The user chose to fix S11. Capacitor 8's `BridgeWebViewClient.onReceivedHttpError`
+loads `errorPath` for any HTTP error on a main-frame load, so a 404, a 500
+or a 502 from the site showed "No connection" with a Retry that could not
+help. `MainActivity` now installs `SiteErrorPagesClient`, a
+`BridgeWebViewClient` whose `onReceivedHttpError` still notifies the
+`WebViewListener`s but does not call `super`, so the site's own error page
+stays. Connection failures (DNS, refused, timeout, offline) arrive through
+`onReceivedError`, which is untouched, so `offline.html` still shows for them.
+Calling `super` and then reloading the page was rejected: it would load
+`offline.html` first and need a guard against loops.
+
+The client is replaced in `onCreate` right after `super.onCreate`, before the
+main looper runs, so the first response already reaches it. Re-check this
+override on every Capacitor upgrade: it copies the listener loop from
+`BridgeWebViewClient`. Nothing here can build Android code. The file was
+type-checked against stubs of the Capacitor signatures; CI builds it, and the
+Appium test `test_a_missing_page_shows_the_sites_404_not_no_connection` is
+the check.
+
+### Correction, 2026-10-26: `SiteErrorPagesClient` notifies no listeners
+
+The first version did not compile in CI: `Bridge.getWebViewListeners()` is
+package-private, and the stubs used for the local type check had made it
+public, so the check could not see the problem. Only Capacitor's own
+`SystemBars` registers a `WebViewListener` in this app, and it uses
+`onPageCommitVisible`, which still runs through `BridgeWebViewClient`.
+Nothing listens for `onReceivedHttpError`, so the override is now empty. A
+plugin added later that needs that event would have to be told some other
+way. Lesson: a stub must copy each member's visibility from the source, not
+only its signature.

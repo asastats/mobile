@@ -3,6 +3,13 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
+ADB="${ANDROID_HOME:-/usr/local/lib/android/sdk}/platform-tools/adb"
+# The slow emulator's launcher stalls ("isn't responding"); the dialog swallows Back.
+"$ADB" shell settings put global hide_error_dialogs 1
+# Chrome's first-run screen would stand in for the browser sheet.
+"$ADB" shell 'echo "_ --disable-fre --no-default-browser-check --no-first-run" > /data/local/tmp/chrome-command-line'
+"$ADB" shell am set-debug-app --persistent com.android.chrome
+
 appium --allow-insecure=uiautomator2:chromedriver_autodownload > appium.log 2>&1 &
 for _ in $(seq 60); do
   curl -sf http://127.0.0.1:4723/status > /dev/null && break

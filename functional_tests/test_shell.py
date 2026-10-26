@@ -3,7 +3,7 @@
 import pytest
 from selenium.common.exceptions import WebDriverException
 
-from conftest import PACKAGE, SITE, VERSION, native, site_loaded, wait, webview
+from conftest import PACKAGE, SITE, VERSION, native, press_back, site_loaded, wait, webview
 
 pytestmark = pytest.mark.live
 
@@ -35,7 +35,7 @@ def test_external_links_open_in_the_browser(driver):
 
     native(driver)
     wait(driver, lambda d: d.current_package != PACKAGE)
-    driver.back()
+    press_back(driver)
     wait(driver, lambda d: d.current_package == PACKAGE)
 
 
@@ -45,8 +45,7 @@ def test_the_back_button_goes_back_in_history(driver):
     driver.execute_script(f"window.location.assign('{SITE}/faq/');")
     wait(driver, lambda d: d.current_url.endswith("/faq/"))
 
-    native(driver)
-    driver.back()
+    press_back(driver)
 
     webview(driver)
     wait(driver, lambda d: d.current_url == start)
@@ -54,15 +53,23 @@ def test_the_back_button_goes_back_in_history(driver):
 
 def test_a_link_to_the_site_opens_in_the_app(driver):
     site_loaded(driver)
-    driver.execute_script(f"window.location.assign('{SITE}/faq/');")
-    wait(driver, lambda d: d.current_url.endswith("/faq/"))
     native(driver)
 
-    # A path the App Links filter covers (AndroidManifest.xml); /faq/ is not one.
-    driver.execute_script("mobile: deepLink", {"url": f"{SITE}/", "package": PACKAGE})
+    # /<word>/ is in the App Links filter (AndroidManifest.xml)
+    driver.execute_script("mobile: deepLink", {"url": f"{SITE}/faq/", "package": PACKAGE})
 
     webview(driver)
-    wait(driver, lambda d: d.current_url == f"{SITE}/")
+    wait(driver, lambda d: d.current_url.endswith("/faq/"))
+
+
+def test_a_missing_page_shows_the_sites_404_not_no_connection(driver):
+    site_loaded(driver)
+    driver.execute_script(f"window.location.assign('{SITE}/no/such/page/');")
+
+    # MainActivity keeps offline.html for unreachable sites only (S11)
+    wait(driver, lambda d: d.execute_script("return document.title").startswith("Page not found"))
+    assert "/no/such/page/" in driver.current_url
+    assert "No connection" not in driver.page_source
 
 
 def test_offline_shows_retry_and_retry_comes_back(driver):
@@ -85,11 +92,13 @@ def test_offline_shows_retry_and_retry_comes_back(driver):
 
 
 def retried(driver):
-    """Click Retry if the offline page is still up; true once the site is back."""
+    """Click Retry once per offline page; true once the site is back."""
+    # Once: a click every poll restarts a load that takes longer than the poll.
     try:
         return driver.execute_script(
             "var retry = document.getElementById('retry');"
-            "if (retry) { retry.click(); return false; }"
+            "if (retry) { if (!window.retried) { window.retried = true; retry.click(); }"
+            " return false; }"
             "return document.documentElement.classList.contains('in-app');"
         )
     except WebDriverException:

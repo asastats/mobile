@@ -118,6 +118,14 @@ def native(driver):
     driver.switch_to.context("NATIVE_APP")
 
 
+def press_back(driver):
+    """Press Back in the native UI, after answering an "isn't responding" dialog."""
+    native(driver)
+    for button in driver.find_elements("id", "android:id/aerr_wait"):
+        button.click()
+    driver.back()
+
+
 def site_loaded(driver):
     """Wait for a page of the site in app mode, in the WebView."""
     webview(driver)

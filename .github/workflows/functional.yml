@@ -220,14 +220,17 @@ jobs:
           python frontend/website/manage.py migrate --noinput
           python frontend/website/manage.py shell < functional_tests/server/seed.py
 
+      # From frontend/: its TEMPLATES DIRS are relative ("templates", "website/templates").
       - name: Start the website
+        working-directory: frontend
         run: |
-          nohup python frontend/website/manage.py runserver 0.0.0.0:8000 --noreload > runserver.log 2>&1 &
+          nohup python website/manage.py runserver 0.0.0.0:8000 --noreload > "$GITHUB_WORKSPACE/runserver.log" 2>&1 &
+          # / renders the site's own templates; /accounts/login/ alone passed without them.
           for _ in $(seq 60); do
-            curl -sf http://127.0.0.1:8000/accounts/login/ > /dev/null && exit 0
+            curl -sf http://127.0.0.1:8000/ > /dev/null && exit 0
             sleep 1
           done
-          cat runserver.log
+          cat "$GITHUB_WORKSPACE/runserver.log"
           exit 1
 
       - run: npm ci

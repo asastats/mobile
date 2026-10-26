@@ -42,8 +42,9 @@
                 <data android:pathPrefix="/profile/" />
                 <data android:pathPrefix="/widgets/" />
                 <data android:pathPrefix="/export/" />
-                <!-- Addresses, bundles and bundle names; API 31+, ignored below -->
+                <!-- Addresses, bundles, bundle names and /<word>/ pages; API 31+, ignored below -->
                 <data android:pathAdvancedPattern="/[^/]+" />
+                <data android:pathAdvancedPattern="/[^/]+/" />
             </intent-filter>
 
             <!-- Sign-in return: com.asastats.app:/auth?ticket=... -->
