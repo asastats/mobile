@@ -791,3 +791,23 @@ length would open in the app, which is harmless (not mid sign-in). Bundles
 (40) and `/<word>/` pages stay browser-only below API 31; a 40-character
 pattern was not added because more site paths have that length. Needs a new
 build, and Android 11 re-verifies App Links only on install or update.
+
+## functional_tests/run-android.sh: the local job ran a stale app (2026-10-27)
+
+Run 40466721680 (`2d17d6b` on GitHub): local 0/5, every test at
+`http://10.0.2.2:8000/accounts/login/` showing Chromium's "Webpage not
+available", `net::ERR_CLEARTEXT_NOT_PERMITTED`. `runserver.log` has no request
+from the emulator at all, yet the first `site_loaded` saw `in-app`: the start
+page was the live site. Appium's log: "'com.asastats.app.debug' is
+installed", then only `pm clear`, no install. The AVD cache
+(`avd-34-google_apis-x86_64`) is saved by a job's post step after its tests,
+so its userdata carries whichever debug build that job installed, and
+UiAutomator2 does not reinstall an app that is already there. This run got a
+live-URL build (no cleartext) in the local job. The previous green run must
+have restored a cache whose app happened to fit; the live job could equally
+have been testing an old build.
+
+`run-android.sh` now uninstalls `com.asastats.app.debug` before Appium starts,
+so each job installs its own APK. Not `appium:enforceAppInstall`: each runner
+signs debug builds with its own fresh debug key, and `install -r` over a
+build with another signature fails.

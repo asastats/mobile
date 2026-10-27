@@ -9,6 +9,8 @@ ADB="${ANDROID_HOME:-/usr/local/lib/android/sdk}/platform-tools/adb"
 # Chrome's first-run screen would stand in for the browser sheet.
 "$ADB" shell 'echo "_ --disable-fre --no-default-browser-check --no-first-run" > /data/local/tmp/chrome-command-line'
 "$ADB" shell am set-debug-app --persistent com.android.chrome
+# The cached AVD keeps an older build; Appium would skip installing ours (logbook).
+"$ADB" uninstall com.asastats.app.debug || true
 
 appium --allow-insecure=uiautomator2:chromedriver_autodownload > appium.log 2>&1 &
 for _ in $(seq 60); do
