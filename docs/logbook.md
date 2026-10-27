@@ -811,3 +811,23 @@ have been testing an old build.
 so each job installs its own APK. Not `appium:enforceAppInstall`: each runner
 signs debug builds with its own fresh debug key, and `install -r` over a
 build with another signature fails.
+
+## .github/workflows/ios.yml: one kept development certificate (2026-10-27)
+
+Run on GitHub `2d17d6b`: Archive failed with "Your account has reached the
+maximum number of certificates" and then "No profiles for
+'com.asastats.app'". The archive is signed with automatic signing on a fresh
+Mac each run. Cloud-managed certificates cover distribution only, so Xcode
+created a new Apple Development certificate (with a private key that died
+with the runner) on every run until Apple refused. The "Signing in CI" entry
+above was right about the export and wrong about the archive.
+
+The step "Development certificate" imports one kept certificate
+(`IOS_DEV_P12_BASE64`, `IOS_DEV_P12_PASSWORD`) into a temporary keychain
+before the archive; Xcode finds it and only refreshes the profile. Without the
+secrets it warns and behaves as before. The key and CSR were made with
+openssl in the planning repo (`capacitor/IOS-SIGNING.md`), since there is no
+Mac. The `.p12` uses SHA1/3DES because macOS `security import` rejects
+OpenSSL 3's default PKCS#12 encryption. Rejected: a distribution `.p12` with
+manual signing (more settings to override per target, including the SPM
+packages).

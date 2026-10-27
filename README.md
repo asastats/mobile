@@ -46,6 +46,8 @@ Repository secrets:
 | `ASC_KEY_ID` | App Store Connect API key id |
 | `ASC_ISSUER_ID` | App Store Connect issuer id |
 | `ASC_KEY_P8_BASE64` | the API key file, `base64 -w0 AuthKey_XXXX.p8` |
+| `IOS_DEV_P12_BASE64` | the one Apple Development certificate CI signs the archive with, `base64 -w0 ios-development.p12`. Optional: without it every run creates a new certificate |
+| `IOS_DEV_P12_PASSWORD` | its `.p12` password |
 | `GOOGLE_SERVICES_JSON_BASE64` | Firebase Android config, `base64 -w0 google-services.json`. Optional: without it the APK builds but has no push |
 | `GOOGLE_SERVICE_INFO_PLIST_BASE64` | Firebase iOS config, `base64 -w0 GoogleService-Info.plist`. **Required** for every iOS build, the simulator one too |
 
