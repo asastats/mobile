@@ -899,3 +899,21 @@ looks for the title in the notification shade. It needs a second secret,
 uses, base64), written to `$RUNNER_TEMP` with umask 077; without it, or
 without `google-services.json`, the test is skipped. The check is "sent
 something", not "sent 1": `notify` reaches every device of the account.
+
+### android/app/src/main/AndroidManifest.xml: `fontScale` in `configChanges` (2026-10-27)
+
+Beta checklist over adb (Redmi, Play build and debug build): changing the
+phone's text size recreated MainActivity, so the app started over on the
+home page and lost the reader's page. Dark mode did not, because `uiMode` was
+already declared. With `fontScale` declared the activity stays; whether the
+WebView then applies the new text size without a restart is to be checked on
+the next CI APK (change the size with the app on FAQ: it should stay on FAQ
+with bigger text). If it keeps the old size until a restart, that is still
+better than losing the page; note it here.
+
+### android/app/src/main/res/drawable*/splash.png: bigger logo checked (2026-10-27)
+
+CI APK versionCode 112302 (built from `0e20a58`, so before `fontScale`) on
+the Redmi, portrait: the start screen shows the larger logo from `a916856`,
+centred and unstretched, then the home page. Same PNGs as the commit
+(md5 matched). The `fontScale` check waits for a build that includes `2ba36e0`.
