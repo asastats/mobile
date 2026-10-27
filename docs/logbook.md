@@ -917,3 +917,57 @@ CI APK versionCode 112302 (built from `0e20a58`, so before `fontScale`) on
 the Redmi, portrait: the start screen shows the larger logo from `a916856`,
 centred and unstretched, then the home page. Same PNGs as the commit
 (md5 matched). The `fontScale` check waits for a build that includes `2ba36e0`.
+
+### android/app/build.gradle, android.yml, functional.yml: kept debug keystore (2026-10-27)
+
+Each CI run signed the debug APK with the runner's fresh `~/.android/debug.keystore`,
+so every new APK refused to install over the last one and needed `adb uninstall`,
+which wiped the sign-in and the Pera session on the Redmi. Now a kept key comes from
+the optional secret `ANDROID_DEBUG_KEYSTORE_BASE64`, written to `$RUNNER_TEMP` and
+passed to Gradle as `ANDROID_DEBUG_KEYSTORE_FILE`; only `storeFile` is overridden,
+so it keeps the standard debug passwords (`android`) and alias (`androiddebugkey`).
+The key lives in `capacitor/keys/asastats-debug.keystore` (PKCS12, RSA 2048,
+10,000 days; SHA-256 `EC:BA:B3:8B:85:A2:1F:E5:EA:E5:D5:0C:59:A7:8E:FD:87:3D:13:E8:CE:F5:96:39:B7:90:7B:C9:69:E1:BE:B2`).
+It is not in `ANDROID_CERT_SHA256` (assetlinks names only `com.asastats.app`).
+The first APK with the kept key still needs one uninstall; later ones install over it.
+Not built locally (no Android SDK on this machine): the first CI run is the check.
+
+### MainActivity.java: text zoom follows a new text size (2026-10-27)
+
+Checked on the Redmi with CI APK 112499 (has `fontScale`): changing the phone's
+text size on FAQ kept the page (a JS marker survived, so no recreation), but
+the text kept its old size; after a restart at 1.3 it was 16 → 20.8 px. The
+WebView takes its text zoom from `fontScale` only when it is created, and
+Capacitor does not set it. `onConfigurationChanged` now sets
+`setTextZoom(fontScale × 100)`, the same value a fresh WebView picks.
+`test_a_new_text_size_keeps_the_page_and_applies` covers it on the emulator; it
+changes `font_scale` through Appium's `mobile: shell`, so `run-android.sh`
+allows `uiautomator2:adb_shell`. Not built locally: the next CI run is the check.
+
+Checked on the Redmi with CI APK 112558 (2026-10-27, 19:48): signed with the
+kept debug key (SHA-256 `EC:BA:…:BE:B2`), so later CI APKs install over it.
+On FAQ, text size 1.0 → 1.3: same page (JS marker kept), text 16 → 20.8 px
+at once; back to 1.0 → 16 px.
+
+### functional_tests/conftest.py: `additionalWebviewBundleIds` for iOS (2026-10-27)
+
+First `functional-ios.yml` run (40561833609, iOS 26.4 simulator, xcuitest
+12.17.3): the three platform-neutral tests timed out in `webview()`; contexts
+were only `NATIVE_APP` although the site was on screen. The WebView was
+inspectable (`CAPACITOR_DEBUG=true` worked: Web Inspector listed the page
+`https://www.asastats.com/`), but Web Inspector reported the app as
+`bundleId: "process-App"` (the executable is named `App`), and Appium
+selects apps by the session's bundle id (`com.asastats.app`) plus WebKit and
+Safari ids, so it never attached. `additionalWebviewBundleIds:
+["process-App"]` adds it. Next CI run is the check.
+
+### functional.yml job `local`: the first test lost the app to Play services (2026-10-27)
+
+Run 40561833822: `test_email_sign_in_works_in_the_app` timed out in
+`webview()` with the launcher in front. Logcat: at 18:51:14, 12 s after the
+app started, `com.google.android.gms.persistent` was killed for a background
+ANR on the freshly booted emulator, and ActivityManager killed the app with it
+("depends on provider …gms/.fonts.provider.FontsProvider in dying proc"; the
+WebView loads fonts through Play services). No exception from the app. The
+other four tests passed. Left as a flake unless it repeats; if it does, a
+warm-up (wait for gms to settle after boot) belongs in `run-android.sh`.

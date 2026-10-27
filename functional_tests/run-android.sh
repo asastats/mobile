@@ -12,7 +12,7 @@ ADB="${ANDROID_HOME:-/usr/local/lib/android/sdk}/platform-tools/adb"
 # The cached AVD keeps an older build; Appium would skip installing ours (logbook).
 "$ADB" uninstall com.asastats.app.debug || true
 
-appium --allow-insecure=uiautomator2:chromedriver_autodownload > appium.log 2>&1 &
+appium --allow-insecure=uiautomator2:chromedriver_autodownload,uiautomator2:adb_shell > appium.log 2>&1 &
 for _ in $(seq 60); do
   curl -sf http://127.0.0.1:4723/status > /dev/null && break
   sleep 1

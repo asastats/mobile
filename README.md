@@ -43,6 +43,7 @@ Repository secrets:
 | `ANDROID_KEYSTORE_PASSWORD` | keystore password |
 | `ANDROID_KEY_ALIAS` | key alias |
 | `ANDROID_KEY_PASSWORD` | key password |
+| `ANDROID_DEBUG_KEYSTORE_BASE64` | the kept debug keystore (passwords `android`, alias `androiddebugkey`), `base64 -w0 asastats-debug.keystore`. Optional: without it each debug APK has a new key and needs an uninstall first |
 | `ASC_KEY_ID` | App Store Connect API key id |
 | `ASC_ISSUER_ID` | App Store Connect issuer id |
 | `ASC_KEY_P8_BASE64` | the API key file, `base64 -w0 AuthKey_XXXX.p8` |

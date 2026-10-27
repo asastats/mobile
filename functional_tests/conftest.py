@@ -103,6 +103,8 @@ def ios_options():
     # The push permission prompt would cover the page.
     options.set_capability("appium:autoAcceptAlerts", True)
     options.set_capability("appium:webviewConnectTimeout", 30000)
+    # Web Inspector names the app by its executable ("App"), not by com.asastats.app
+    options.set_capability("appium:additionalWebviewBundleIds", ["process-App"])
     options.set_capability("appium:wdaLaunchTimeout", 240000)
     options.set_capability("appium:newCommandTimeout", 300)
     return options

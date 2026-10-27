@@ -3,6 +3,8 @@ apply plugin: 'com.android.application'
 // versionName and the shared build number come from package.json ("version", "buildNumber").
 def pkg = new groovy.json.JsonSlurper().parse(file('../../package.json'))
 def releaseKeystore = System.getenv('ANDROID_KEYSTORE_FILE')
+// CI's kept debug key (standard debug passwords and alias); unset, Gradle uses ~/.android/debug.keystore.
+def debugKeystore = System.getenv('ANDROID_DEBUG_KEYSTORE_FILE')
 
 android {
     namespace = "com.asastats.app"
@@ -22,6 +24,11 @@ android {
         }
     }
     signingConfigs {
+        if (debugKeystore) {
+            debug {
+                storeFile file(debugKeystore)
+            }
+        }
         if (releaseKeystore) {
             release {
                 storeFile file(releaseKeystore)

@@ -66,6 +66,27 @@ def test_a_link_to_the_site_opens_in_the_app(driver):
     wait(driver, lambda d: d.current_url.endswith("/faq/"))
 
 
+@pytest.mark.android
+def test_a_new_text_size_keeps_the_page_and_applies(driver):
+    site_loaded(driver)
+    driver.find_element("css selector", 'a[href="/faq/"]').click()
+    wait(driver, lambda d: d.current_url.endswith("/faq/"))
+    size = "return [window.kept, parseFloat(getComputedStyle(document.querySelector('main p')).fontSize)];"
+    driver.execute_script("window.kept = true;")
+    before = driver.execute_script(size)[1]
+
+    native(driver)
+    driver.execute_script("mobile: shell", {"command": "settings", "args": ["put", "system", "font_scale", "1.3"]})
+    try:
+        webview(driver)
+        # kept: the activity was not recreated (fontScale in configChanges)
+        wait(driver, lambda d: d.execute_script(size) == [True, pytest.approx(before * 1.3, abs=0.5)])
+        assert driver.current_url.endswith("/faq/")
+    finally:
+        native(driver)
+        driver.execute_script("mobile: shell", {"command": "settings", "args": ["put", "system", "font_scale", "1.0"]})
+
+
 def test_a_missing_page_shows_the_sites_404_not_no_connection(driver):
     site_loaded(driver)
     driver.execute_script(f"window.location.assign('{SITE}/no/such/page/');")
