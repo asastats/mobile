@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Splash at its own size on the splash colour; a bare bitmap stretched to the window. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/ic_launcher_background" />
+    <item>
+        <bitmap android:gravity="center" android:src="@drawable/splash" />
+    </item>
+</layer-list>

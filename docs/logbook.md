@@ -831,3 +831,21 @@ Mac. The `.p12` uses SHA1/3DES because macOS `security import` rejects
 OpenSSL 3's default PKCS#12 encryption. Rejected: a distribution `.p12` with
 manual signing (more settings to override per target, including the SPM
 packages).
+
+## android/app/src/main/res/drawable/launch_splash.xml, capacitor.config.ts: the start-screen logo stretched (2026-10-27)
+
+User report: the logo is stretched while the app starts, most visibly in
+landscape (Redmi 9, Android 11). Below Android 12 the start screen is drawn
+twice from `drawable*/splash.png`: as the launch theme's `android:background`
+(a bare bitmap fills the window) and by the SplashScreen plugin's image view,
+whose default `androidScaleType` is `FIT_XY`. Both stretch the image to the
+screen's shape: the Redmi takes `drawable-land-xxhdpi` (1600x960) for a
+2340x1080 screen, 46 % wider but 12 % taller.
+
+Both now draw it unscaled and centred: the theme uses `launch_splash.xml`
+(the splash colour, then the bitmap with `gravity="center"`), and the plugin
+uses `CENTER`. The images' background is `#140A2E` like the window and the
+plugin's `backgroundColor`, so the margins do not show, and the logo has the
+same size in both phases. Rejected: `CENTER_CROP` (the logo would change size
+between the theme and the plugin). Android 12+ draws its own splash from the
+launcher icon and is unchanged. Not built here; check on the next CI APK.

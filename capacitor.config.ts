@@ -60,6 +60,8 @@ const config: CapacitorConfig = {
       launchAutoHide: true,
       launchShowDuration: 3000,
       backgroundColor: '#140a2e',
+      // Unscaled and centred, like launch_splash.xml: the default FIT_XY stretched it.
+      androidScaleType: 'CENTER',
     },
     // iOS: show an alert that arrives while the app is open, too.
     FirebaseMessaging: {
