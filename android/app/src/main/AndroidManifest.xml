@@ -45,6 +45,8 @@
                 <!-- Addresses, bundles, bundle names and /<word>/ pages; API 31+, ignored below -->
                 <data android:pathAdvancedPattern="/[^/]+" />
                 <data android:pathAdvancedPattern="/[^/]+/" />
+                <!-- Addresses below API 31: any path of exactly 58 characters after the slash -->
+                <data android:pathPattern="/.........................................................." />
             </intent-filter>
 
             <!-- Sign-in return: com.asastats.app:/auth?ticket=... -->

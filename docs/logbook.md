@@ -758,3 +758,36 @@ not affected. The test now clicks the footer's `/faq/` link through
 chromedriver, which sends real input events. That Chromium explanation fits
 the evidence but is not proven; if the tapped version still minimizes, look
 again.
+
+## offline/asastats-logo.svg: no black background (2026-10-26)
+
+The first time the logo actually loaded on Android (with the self-contained
+page, on the Redmi 9) it sat in a black box on the purple page: the Inkscape
+file had a full-size black `<rect>` behind the wordmark. Removed, so the logo
+is transparent like the splash screen.
+
+## Process death while the browser sheet is open: measured (2026-10-26)
+
+On the Redmi 9 (Android 11, MIUI) with normal developer settings, logcat
+showed `Process com.asastats.app.debug ... has died: prev LAST` about 25 s
+after an external link opened Firefox's Custom Tab. Back from the tab started
+the app afresh and frontend's `returnPage.ts` brought it back to the address
+page. So the user's earlier report (landing on `/`) was this, and the fix is
+needed in normal use, not only under "Don't keep activities".
+
+## android/app/src/main/AndroidManifest.xml: addresses open the app below Android 12 (2026-10-26)
+
+On the Redmi 9 (Android 11) only `/`, `/home/`, `/profile/`, `/widgets/` and
+`/export/` opened the app: `pathAdvancedPattern` is API 31+ and ignored
+below, so address links went to the browser. The user approved a
+fixed-length `pathPattern`: `/` and 58 `.` (each matches any one character),
+which is exactly the address route (`core/urls.py`, `^([0-9A-Za-z]{58})$`).
+
+It matches any other 59-character path too. The OAuth callbacks the F4 rule
+keeps out of the filter are 31-40 characters
+(`/accounts/twitter_oauth2/login/callback/` is the longest), so none can
+match. An allauth email-confirmation or password-reset link of exactly that
+length would open in the app, which is harmless (not mid sign-in). Bundles
+(40) and `/<word>/` pages stay browser-only below API 31; a 40-character
+pattern was not added because more site paths have that length. Needs a new
+build, and Android 11 re-verifies App Links only on install or update.
