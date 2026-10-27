@@ -849,3 +849,53 @@ plugin's `backgroundColor`, so the margins do not show, and the logo has the
 same size in both phases. Rejected: `CENTER_CROP` (the logo would change size
 between the theme and the plugin). Android 12+ draws its own splash from the
 launcher icon and is unchanged. Not built here; check on the next CI APK.
+
+### android/app/src/main/res/drawable/launch_splash.xml on the Redmi (2026-10-27)
+
+CI debug APK (versionCode 111997) on the Redmi, start screen screen-recorded:
+the logo is centred at its own size on `#140A2E` in both phases (theme, then
+plugin), no jump between them, no stretch. Landscape not forced over adb:
+MIUI's launcher is portrait-only and resets `user_rotation` on each cold
+start, so a launch from home draws the start screen in portrait and rotates
+after. A launch while held sideways with auto-rotate on is for the user's eye.
+
+### scripts/make-icons.py: Android start-screen logo half the short side (2026-10-27)
+
+User, after the unstretched start screen: landscape fine, but the logo quite
+small. Since `launch_splash.xml` draws `splash.png` unscaled, the script's
+`share` is the logo's size on screen: a third of the short side was about
+27 % of the Redmi's width in portrait. Android now uses `share=2` (about 41 %
+in portrait; in landscape the same physical size, limited by the height).
+iOS keeps 6: its square is aspect-filled and nobody reported it. Only the 11
+Android `splash.png` files changed when the script ran; icons are identical.
+Needs a CI build to see on the phone.
+
+### .github/workflows/functional-ios.yml, functional_tests/conftest.py: Appium on the iOS simulator (3c, 2026-10-27)
+
+`ASASTATS_PLATFORM=ios` switches the `driver` fixture to XCUITest on a booted
+simulator with the Debug simulator build (`-derivedDataPath build`, so the
+app is at `build/Build/Products/Debug-iphonesimulator/App.app`). The live
+tests that are not tied to Android run there: app mode and user agent, the
+`ASAStatsApp` API, the site's 404. Back, App Links, the browser sheet and
+`setConnectivity` are Android mechanisms; those tests carry the `android`
+marker and are skipped on iOS (counterparts would need Universal Links on a
+simulator and SFSafariViewController contexts).
+
+`CAPACITOR_DEBUG=true` on the xcodebuild line: Info.plist reads that build
+setting, which the project never defines, and with Capacitor as a Swift
+package the bridge's `#if DEBUG` is compiled into the package, not the app,
+so without it the WKWebView is not inspectable and Appium sees no WEBVIEW
+context. Release builds are untouched. `autoAcceptAlerts` answers the push
+permission prompt. Appium 3.8.0 as on Android; `xcuitest@12.17.3`. First CI
+run pending.
+
+### functional_tests/test_local.py: a delivered notification (2026-10-27)
+
+`test_a_push_reaches_the_notification_shade` registers the emulator through
+`ASAStatsApp.enablePush`, runs the CI server's own `alerts.push.notify` for
+the test account (`manage.py shell -c`, so the real FCM v1 request), then
+looks for the title in the notification shade. It needs a second secret,
+`FCM_SERVICE_ACCOUNT_BASE64` (the Firebase service-account JSON the server
+uses, base64), written to `$RUNNER_TEMP` with umask 077; without it, or
+without `google-services.json`, the test is skipped. The check is "sent
+something", not "sent 1": `notify` reaches every device of the account.

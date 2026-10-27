@@ -68,8 +68,9 @@ def main():
             folder / "ic_launcher_foreground.png"
         )
 
+    # Drawn unscaled and centred (launch_splash.xml), so the share is its size on screen.
     for path in RES.glob("drawable*/splash.png"):
-        splash(Image.open(path).size, wordmark).save(path)
+        splash(Image.open(path).size, wordmark, share=2).save(path)
     # The iOS square is aspect-filled to the screen height, which enlarges it about 2x.
     for path in (XCASSETS / "Splash.imageset").glob("splash-*.png"):
         splash(Image.open(path).size, wordmark, share=6).save(path)

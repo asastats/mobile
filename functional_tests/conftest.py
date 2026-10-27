@@ -1,4 +1,5 @@
-"""The installed debug app, driven by Appium (UiAutomator2) on an emulator.
+"""The installed debug app, driven by Appium: UiAutomator2 on an Android emulator,
+XCUITest on an iOS simulator (ASASTATS_PLATFORM=ios).
 
 Run by .github/workflows/functional.yml; see capacitor/MOBILE-TESTING.md.
 """
@@ -11,12 +12,16 @@ import pytest
 from appium import webdriver
 from appium.common.exceptions import NoSuchContextException
 from appium.options.android import UiAutomator2Options
+from appium.options.ios import XCUITestOptions
 from selenium.webdriver.support.ui import WebDriverWait
 
 ROOT = Path(__file__).resolve().parent.parent
+PLATFORM = os.environ.get("ASASTATS_PLATFORM", "android")
 APK = Path(os.environ.get("ASASTATS_APK", ROOT / "android/app/build/outputs/apk/debug/app-debug.apk"))
-#: The debug build's package (`applicationIdSuffix '.debug'`).
-PACKAGE = "com.asastats.app.debug"
+#: The simulator build, from functional-ios.yml's -derivedDataPath.
+IOS_APP = Path(os.environ.get("ASASTATS_IOS_APP", ROOT / "build/Build/Products/Debug-iphonesimulator/App.app"))
+#: The debug build's package (`applicationIdSuffix '.debug'`); iOS has no debug suffix.
+PACKAGE = "com.asastats.app.debug" if PLATFORM == "android" else "com.asastats.app"
 SITE = os.environ.get("ASASTATS_URL", "https://www.asastats.com")
 APPIUM = os.environ.get("APPIUM_URL", "http://127.0.0.1:4723")
 VERSION = json.loads((ROOT / "package.json").read_text())["version"]
@@ -62,8 +67,9 @@ def save_evidence(driver, folder):
         native(driver)
         driver.get_screenshot_as_file(str(folder / "screen.png"))
         (folder / "native.xml").write_text(driver.page_source)
-        logcat = driver.get_log("logcat")
-        (folder / "logcat.txt").write_text("\n".join(entry["message"] for entry in logcat))
+        log = "logcat" if PLATFORM == "android" else "syslog"
+        entries = driver.get_log(log)
+        (folder / f"{log}.txt").write_text("\n".join(entry["message"] for entry in entries))
     except Exception as error:  # noqa: BLE001
         notes.append(f"native: {error!r}")
     (folder / "notes.txt").write_text("\n".join(notes) + "\n")
@@ -76,8 +82,33 @@ def _contexts(driver):
         return []
 
 
+def pytest_collection_modifyitems(config, items):
+    for item in items:
+        if "android" in item.keywords and PLATFORM != "android":
+            item.add_marker(pytest.mark.skip(reason="Android only"))
+
+
 @pytest.fixture
 def driver():
+    options = ios_options() if PLATFORM == "ios" else android_options()
+    session = webdriver.Remote(APPIUM, options=options)
+    yield session
+    session.quit()
+
+
+def ios_options():
+    options = XCUITestOptions()
+    options.set_capability("appium:app", str(IOS_APP.resolve()))
+    options.set_capability("appium:udid", os.environ["ASASTATS_SIMULATOR"])
+    # The push permission prompt would cover the page.
+    options.set_capability("appium:autoAcceptAlerts", True)
+    options.set_capability("appium:webviewConnectTimeout", 30000)
+    options.set_capability("appium:wdaLaunchTimeout", 240000)
+    options.set_capability("appium:newCommandTimeout", 300)
+    return options
+
+
+def android_options():
     options = UiAutomator2Options()
     options.set_capability("appium:app", str(APK.resolve()))
     options.set_capability("appium:appPackage", PACKAGE)
@@ -85,9 +116,7 @@ def driver():
     # The WebView's Chrome version decides the chromedriver; Appium fetches it.
     options.set_capability("appium:chromedriverAutodownload", True)
     options.set_capability("appium:newCommandTimeout", 300)
-    session = webdriver.Remote(APPIUM, options=options)
-    yield session
-    session.quit()
+    return options
 
 
 def wait(driver, predicate, timeout=TIMEOUT):

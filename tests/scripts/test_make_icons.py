@@ -77,5 +77,8 @@ def test_main_writes_every_icon_and_splash(make_icons, tmp_path, monkeypatch):
         splash = Image.open(path)
         assert splash.size == (320, 480)
         assert splash.getpixel((160, 240)) == (255, 255, 255)
+        # Half the short side: the 160 px wordmark spans x 80-240.
+        assert splash.getpixel((82, 240)) == (255, 255, 255)
+        assert splash.getpixel((77, 240)) == BACKGROUND
     ios = Image.open(xcassets / "Splash.imageset/splash-2732x2732.png")
     assert ios.getpixel((0, 0)) == BACKGROUND

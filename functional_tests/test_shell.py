@@ -3,7 +3,7 @@
 import pytest
 from selenium.common.exceptions import WebDriverException
 
-from conftest import PACKAGE, SITE, VERSION, native, press_back, site_loaded, wait, webview
+from conftest import PACKAGE, PLATFORM, SITE, VERSION, native, press_back, site_loaded, wait, webview
 
 pytestmark = pytest.mark.live
 
@@ -14,8 +14,8 @@ def test_the_site_loads_in_app_mode(driver):
     html = driver.execute_script(
         "return [document.documentElement.dataset.appPlatform, navigator.userAgent];"
     )
-    assert html[0] == "android"
-    assert html[1].endswith(f"ASAStatsApp/{VERSION} (android)")
+    assert html[0] == PLATFORM
+    assert html[1].endswith(f"ASAStatsApp/{VERSION} ({PLATFORM})")
 
 
 def test_app_js_publishes_the_api_page_scripts_use(driver):
@@ -28,6 +28,7 @@ def test_app_js_publishes_the_api_page_scripts_use(driver):
     assert api == [True, "function", "function", "function"]
 
 
+@pytest.mark.android
 def test_external_links_open_in_the_browser(driver):
     site_loaded(driver)
 
@@ -39,6 +40,7 @@ def test_external_links_open_in_the_browser(driver):
     wait(driver, lambda d: d.current_package == PACKAGE)
 
 
+@pytest.mark.android
 def test_the_back_button_goes_back_in_history(driver):
     site_loaded(driver)
     start = driver.current_url
@@ -52,6 +54,7 @@ def test_the_back_button_goes_back_in_history(driver):
     wait(driver, lambda d: d.current_url == start)
 
 
+@pytest.mark.android
 def test_a_link_to_the_site_opens_in_the_app(driver):
     site_loaded(driver)
     native(driver)
@@ -73,6 +76,7 @@ def test_a_missing_page_shows_the_sites_404_not_no_connection(driver):
     assert "No connection" not in driver.page_source
 
 
+@pytest.mark.android
 def test_offline_shows_retry_and_retry_comes_back(driver):
     site_loaded(driver)
     native(driver)

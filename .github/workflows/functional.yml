@@ -248,6 +248,20 @@ jobs:
           echo "$GOOGLE_SERVICES_JSON_BASE64" | base64 -d > android/app/google-services.json
           echo "ASASTATS_PUSH=1" >> "$GITHUB_ENV"
 
+      # Lets the delivered-notification test send through FCM (alerts/push.py settings).
+      - name: FCM sender
+        env:
+          FCM_SERVICE_ACCOUNT_BASE64: ${{ secrets.FCM_SERVICE_ACCOUNT_BASE64 }}
+        run: |
+          if [ -z "$FCM_SERVICE_ACCOUNT_BASE64" ]; then
+            echo "::notice::FCM_SERVICE_ACCOUNT_BASE64 not set: the delivered-notification test is skipped"
+            exit 0
+          fi
+          umask 077
+          echo "$FCM_SERVICE_ACCOUNT_BASE64" | base64 -d > "$RUNNER_TEMP/fcm.json"
+          echo "FCM_PROJECT_ID=asa-stats-d0931" >> "$GITHUB_ENV"
+          echo "FCM_CREDENTIALS_FILE=$RUNNER_TEMP/fcm.json" >> "$GITHUB_ENV"
+
       - name: Debug APK
         working-directory: android
         run: ./gradlew --no-daemon assembleDebug

@@ -1,10 +1,13 @@
 """The app against a Django server started in CI, signed in as a test account."""
 
 import os
+import subprocess
+import sys
+from pathlib import Path
 
 import pytest
 
-from conftest import SITE, TIMEOUT, devices, native, sign_in, site_loaded, wait
+from conftest import SITE, TIMEOUT, USER, devices, native, sign_in, site_loaded, wait
 
 pytestmark = pytest.mark.local
 
@@ -76,3 +79,39 @@ def test_push_registers_this_device_and_logout_removes_it(driver):
     driver.execute_script("document.getElementById('logout').click();")
     wait(driver, lambda d: not d.execute_script("return !!document.getElementById('logout');"))
     assert devices() == []
+
+
+#: Sends through the CI server's own `notify`, as an alert would.
+SEND = """
+from django.contrib.auth import get_user_model
+from widgets.inhouse.alerts.push import notify
+user = get_user_model().objects.get(username={user!r})
+print("sent", notify(user, {{"title": {title!r}, "body": "Delivered to the emulator", "url": "/"}}))
+"""
+
+
+@pytest.mark.skipif(
+    not (os.environ.get("ASASTATS_PUSH") and os.environ.get("FCM_CREDENTIALS_FILE")),
+    reason="no google-services.json or no Firebase service account in CI",
+)
+def test_a_push_reaches_the_notification_shade(driver):
+    sign_in(driver)
+    driver.set_script_timeout(TIMEOUT)
+    result = driver.execute_async_script(
+        "var done = arguments[arguments.length - 1];"
+        "window.ASAStatsApp.enablePush(arguments[0]).then(done, function (e) { done(String(e)); });",
+        DEVICE_URLS,
+    )
+    assert result == {"ok": True, "message": "This device is on."}
+    title = f"Functional test {os.getpid()}"
+
+    manage = Path(os.environ["GITHUB_WORKSPACE"]) / "frontend/website/manage.py"
+    sent = subprocess.run(
+        [sys.executable, str(manage), "shell", "-c", SEND.format(user=USER, title=title)],
+        capture_output=True, text=True, check=True,
+    )
+    assert "sent " in sent.stdout and "sent 0" not in sent.stdout, sent.stdout + sent.stderr
+
+    native(driver)
+    driver.open_notifications()
+    wait(driver, lambda d: d.find_elements("xpath", f'//*[@text="{title}"]'))
