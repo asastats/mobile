@@ -971,3 +971,18 @@ ANR on the freshly booted emulator, and ActivityManager killed the app with it
 WebView loads fonts through Play services). No exception from the app. The
 other four tests passed. Left as a flake unless it repeats; if it does, a
 warm-up (wait for gms to settle after boot) belongs in `run-android.sh`.
+
+### .github/workflows/*.yml: action majors bumped for Node 24 (2026-10-28)
+
+CI warned that `setup-java@v4` is deprecated and that Node 20 actions are
+being forced onto Node 24. Bumped to the current majors (latest releases
+read from GitHub on 2026-10-28): `checkout@v7`, `setup-node@v7`,
+`setup-java@v6`, `setup-python@v7`, `cache@v6`, `upload-artifact@v7`; all
+run on Node 24. Breaking notes checked against our inputs: setup-java v6
+drops the legacy Adopt distributions (we use `temurin`); setup-python v7
+drops `pip-install` and end-of-life Pythons (we use neither: 3.12);
+setup-node v5/v6 cache automatically only from a `packageManager` field
+(none here; `cache: npm` is explicit); upload-artifact v7 only adds an
+opt-in `archive: false`. `android-emulator-runner@v2` and `setup-xcode@v1`
+already run on `node24` at their floating tags, so they stay. The frontend
+workflows were already on v6/v7 majors and are not touched here.
