@@ -1,5 +1,5 @@
-ASA Stats app documentation
-===========================
+ASA Stats mobile documentation
+==============================
 
 The iOS and Android app "ASA Stats" (``com.asastats.app``) is a Capacitor 8 shell
 around https://www.asastats.com. It adds native features the website cannot have

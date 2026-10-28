@@ -9,7 +9,7 @@ from sphinx.ext.autodoc.mock import mock
 
 ROOT = Path(__file__).resolve().parent.parent
 
-project = "ASA Stats app"
+project = "ASA Stats mobile"
 copyright = "2026, ASA Stats DAO"
 author = "Ivica Paleka"
 release = json.loads((ROOT / "package.json").read_text())["version"]

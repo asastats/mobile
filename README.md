@@ -1,4 +1,4 @@
-# ASA Stats app
+# ASA Stats mobile
 
 [![docs](https://img.shields.io/readthedocs/asastats-mobile/latest)](https://asastats-mobile.readthedocs.io/en/latest/?badge=latest)
 
