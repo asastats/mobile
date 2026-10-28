@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from conftest import SITE, TIMEOUT, USER, devices, native, sign_in, site_loaded, wait
+from conftest import PACKAGE, SITE, TIMEOUT, USER, devices, native, sign_in, site_loaded, wait
 
 pytestmark = pytest.mark.local
 
@@ -59,6 +59,39 @@ def test_social_sign_in_without_https_says_it_did_not_finish(driver):
     message = wait(driver, lambda d: d.find_elements("id", "android:id/message"))
     assert message[0].text.startswith("Sign-in did not finish")
     driver.find_element("id", "android:id/button1").click()
+
+
+def test_a_restart_behind_walletconnect_comes_back_to_the_login_page_and_says_so(driver):
+    site_loaded(driver)
+    driver.get(f"{SITE}/accounts/login/")
+    site_loaded(driver)
+    button = wait(
+        driver,
+        lambda d: d.find_elements(
+            "css selector", "#evm-wallet-connect [data-connector-id='walletconnect']"
+        ),
+    )[0]
+    # app.js notes the tap in the capture phase; WalletConnect itself is not opened.
+    driver.execute_script(
+        "document.getElementById('evm-wallet-connect')"
+        ".addEventListener('click', function (e) { e.stopPropagation(); }, true);"
+        "arguments[0].click();",
+        button,
+    )
+
+    # As MIUI does behind the wallet.
+    driver.terminate_app(PACKAGE)
+    driver.activate_app(PACKAGE)
+    site_loaded(driver)
+
+    notice = wait(
+        driver,
+        lambda d: d.find_elements(
+            "css selector", "#evm-wallet-connect [data-wallet-handoff='evm']"
+        ),
+    )[0]
+    assert driver.current_url == f"{SITE}/accounts/login/"
+    assert "Your phone closed ASA Stats while your wallet was open" in notice.text
 
 
 @pytest.mark.skipif(

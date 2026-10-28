@@ -225,6 +225,8 @@ jobs:
             echo DATABASE_PASSWORD="postgres"
             echo REDIS_PORT_LOCAL="6379"
             echo PGPASSFILE=""
+            # Renders the WalletConnect button; the hand-off test never opens it.
+            echo WALLET_CONNECT_PROJECT_ID="functional-tests-only"
           } > frontend/website/.env
 
       - name: Database and the test account
@@ -271,6 +273,7 @@ jobs:
           fi
           umask 077
           echo "$FCM_SERVICE_ACCOUNT_BASE64" | base64 -d > "$RUNNER_TEMP/fcm.json"
+          echo "Service account key from project: $(jq -r .project_id "$RUNNER_TEMP/fcm.json")"
           echo "FCM_PROJECT_ID=asa-stats-d0931" >> "$GITHUB_ENV"
           echo "FCM_CREDENTIALS_FILE=$RUNNER_TEMP/fcm.json" >> "$GITHUB_ENV"
 

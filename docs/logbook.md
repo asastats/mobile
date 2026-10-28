@@ -1089,3 +1089,50 @@ authenticates, but its service account has no FCM sending role in that
 project. A console change for the user (`capacitor/FCM-403.txt`), not code.
 `test_email_sign_in_works_in_the_app` passed this time (the Play services
 flake above did not repeat).
+
+### functional_tests/test_local.py, functional.yml: the EVM hand-off restart test (2026-10-28)
+
+`test_a_restart_behind_walletconnect_comes_back_to_the_login_page_and_says_so`
+notes a WalletConnect tap (the picker is never opened), force-stops the app
+and checks the reopened app is back on `/accounts/login/` with the hand-off
+notice. The local site gets `WALLET_CONNECT_PROJECT_ID` so the button renders.
+It needs the frontend commit that extends the hand-off to the EVM button
+(frontend logbook, EVM resume, 2026-10-28) on GitHub: until then it fails. The
+hand-off runs only with the native bridge, so the website's own functional
+tests cannot cover it.
+
+### .github/workflows/functional-ios.yml: keep-alive timeout and a WebDriverAgent build step (2026-10-28)
+
+The run after `fb9fad0` (`isHeadless`; job log `logs_110260969858`,
+`appium-log-ios`): `isHeadless` worked ("already booted in headless mode", no
+reboot), and `test_a_missing_page_shows_the_sites_404_not_no_connection`
+passed, but the first two tests errored in setup with `RemoteDisconnected`.
+The Appium log shows why:
+
+- 11:35:35 first `POST /session`. Its reset ("failed to terminate Simulator
+  application", the app was not installed yet) did not finish until 11:51:59.
+- 11:45:38 Appium closed that request with no response (`<-- POST /session - -
+  ms - -`): 600 s, Appium's default `--keep-alive-timeout`, which is also the
+  connection timeout. The client has no timeout of its own (Selenium's
+  `ClientConfig` uses the socket default, None), so this was the server.
+  pytest went on to the next test and opened a second session, while the first
+  kept starting on the server.
+- Both sessions then built and started WebDriverAgent on the same device and
+  port and broke each other ("Session ID is required but was not set"). The
+  third session (11:55:40) found WebDriverAgent up and took it over
+  (`existing-url`, 12:01:56); that test passed.
+
+Changes: `--keep-alive-timeout 1800` so the first session is not cut off while
+it starts, and a `build-wda` step after the boot so that session does not also
+build WebDriverAgent (the 7 min seen in both iOS runs so far). The step also
+gives the fresh simulator time to settle before the first reset; why its
+`terminate` took over ten minutes is not known. Whether the driver's own
+`build-for-testing` reuses the step's build (same default DerivedData) is for
+the next run to show: compare its "WebDriverAgent successfully started after"
+line with the 416932 ms here.
+
+### .github/workflows/functional.yml: the FCM key's project in the log (2026-10-28)
+
+Third FCM 403 in a row (job `local`, 12:13 UTC, `logs_110260969969`). The
+FCM sender step now prints the key's `project_id` (not secret), so the next
+log shows whether the key belongs to `asa-stats-d0931` or to another project.
