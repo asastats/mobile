@@ -1065,3 +1065,27 @@ enables it and accepts `.md` sources. `logbook.md` stays in `exclude_patterns`,
 so it is still not published. Autodoc still covers Python only: a TypeScript
 page would need TypeDoc output the way `frontend/docs/` has it, and nothing
 here generates that yet. The README slug is `asastats-mobile`.
+
+### functional_tests/conftest.py: `isHeadless` for the iOS simulator (2026-10-28)
+
+The run after `41d6a92` (job log `logs_110226765295`): `additionalWebviewBundleIds`
+works, `test_app_js_publishes_the_api_page_scripts_use` and
+`test_a_missing_page_shows_the_sites_404_not_no_connection` passed in the
+WebView. The first test errored in session setup: "Device … did not finish
+booting within 120000ms". The workflow's `simctl boot` had finished
+(`bootstatus` took 3 min 45 s, mostly first-boot data migration), but Appium
+logged "booted while its UI is not visible. Trying to restart it with the
+Simulator window visible", opened Simulator.app and waited for a second boot
+that outran its 120 s. The next session found both running and went on (its
+WebDriverAgent build took ~7 min, 10:00 → 10:07). `appium:isHeadless: true`
+tells Appium the window is not wanted, so it uses the simulator as booted.
+Next CI run is the check.
+
+The other failure this round was `functional.yml` job `local` (`logs_110226765262`):
+`test_a_push_reaches_the_notification_shade` ran for the first time (the
+`FCM_SERVICE_ACCOUNT_BASE64` secret is now set) and FCM answered 403
+`cloudmessaging.messages.create` denied on `projects/asa-stats-d0931`: the key
+authenticates, but its service account has no FCM sending role in that
+project. A console change for the user (`capacitor/FCM-403.txt`), not code.
+`test_email_sign_in_works_in_the_app` passed this time (the Play services
+flake above did not repeat).

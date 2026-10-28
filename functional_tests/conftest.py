@@ -105,6 +105,8 @@ def ios_options():
     options.set_capability("appium:webviewConnectTimeout", 30000)
     # Web Inspector names the app by its executable ("App"), not by com.asastats.app
     options.set_capability("appium:additionalWebviewBundleIds", ["process-App"])
+    # The workflow boots the simulator without its window; otherwise Appium reboots it.
+    options.set_capability("appium:isHeadless", True)
     options.set_capability("appium:wdaLaunchTimeout", 240000)
     options.set_capability("appium:newCommandTimeout", 300)
     return options
