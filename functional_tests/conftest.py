@@ -75,7 +75,25 @@ def save_evidence(driver, folder):
         (folder / f"{log}.txt").write_text("\n".join(entry["message"] for entry in entries))
     except Exception as error:  # noqa: BLE001
         notes.append(f"native: {error!r}")
+    if PLATFORM == "android":
+        save_push_evidence(driver, folder, notes)
     (folder / "notes.txt").write_text("\n".join(notes) + "\n")
+
+
+#: Lines of the full logcat that say whether a push reached the app.
+PUSH_LOG = ("AlertMessaging", "FirebaseMessaging", "GCM", "FCM", "c2dm", "CloudMessag", "AndroidRuntime")
+
+
+def save_push_evidence(driver, folder, notes):
+    """Save push lines from the whole logcat (Appium's copy is capped) and the posted notifications."""
+    try:
+        logcat = driver.execute_script("mobile: shell", {"command": "logcat", "args": ["-d", "-v", "time"]})
+        dump = driver.execute_script("mobile: shell", {"command": "dumpsys", "args": ["notification", "--noredact"]})
+        lines = [line for line in logcat.splitlines() if any(key in line for key in PUSH_LOG)]
+        posted = [line for line in dump.splitlines() if "asastats" in line]
+        (folder / "push.txt").write_text("\n".join(lines + ["--- dumpsys notification"] + posted) + "\n")
+    except Exception as error:  # noqa: BLE001
+        notes.append(f"push evidence: {error!r}")
 
 
 def _contexts(driver):

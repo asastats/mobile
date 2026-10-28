@@ -3,6 +3,7 @@
 import os
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 import pytest
@@ -78,6 +79,9 @@ def test_a_restart_behind_walletconnect_comes_back_to_the_login_page_and_says_so
         "arguments[0].click();",
         button,
     )
+    assert driver.execute_script("return localStorage.getItem('asastats.walletHandoff');")
+    # Chromium writes localStorage to disk a few seconds late; see docs/logbook.md.
+    time.sleep(8)
 
     # As MIUI does behind the wallet. Native first, so the WebView is attached afresh.
     native(driver)

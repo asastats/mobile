@@ -1218,3 +1218,41 @@ Not compiled here (no Android SDK on this machine): the Android workflow
 checks the build, and the new functional test
 `test_a_push_while_the_app_is_open_is_shown_and_its_tap_opens_the_page`
 checks the notification and its tap on the emulator.
+
+### functional_tests/test_local.py: the restart test waits for localStorage to reach disk (2026-10-28)
+
+CI run of 16:50 UTC (local job, frontend `main` at `bf55717` on GitHub): the
+restart now reattaches the WebView, but the app came back on `/` with no
+handoff notice. The handoff record (`asastats.walletHandoff`,
+frontend `wallet/src/app/walletHandoff.ts`) lives in `localStorage`, and
+Chromium commits `localStorage` to disk on a delay of a few seconds (believed
+~5 s, not measured here); the test force-stopped the app right after the tap,
+so the write most likely never reached disk. On a phone the wallet is open far
+longer than that before MIUI kills the app, which fits the Pera/Defly resume
+working on the Redmi. The test now asserts the record exists in the page (so a
+missed capture-phase listener fails on its own line) and waits 8 s before
+`terminate_app`. If it still fails after that, the cause is elsewhere.
+
+### .github/workflows/functional-ios.yml: warm xcrun before `build-wda` (2026-10-28)
+
+Run of 17:45 UTC: the WebDriverAgent build step (added in `e560b4a`) failed
+before any test with `Command 'xcrun --sdk iphonesimulator --show-sdk-version'
+timed out after 15000ms` (Appium's xcuitest driver runs it through
+`teen_process` with a 15 s timeout). Right after the simulator boot, a fresh
+runner's first `xcrun` lookup can be slower than that. The step now calls the
+same command once without a limit, so the driver's call hits the warm cache,
+and retries `build-wda` once.
+
+### functional_tests/conftest.py `save_push_evidence`, AlertMessagingService receipt line (2026-10-28)
+
+Run of 17:45 UTC (mobile with `ddd5f82`, `ca92f36`): the restart test passed,
+but both push tests failed, the background one included (it passed at 16:50
+UTC before `ddd5f82`). `notify` returned a non-zero count, so FCM accepted the
+send for the freshly registered token; the shade showed only system
+notifications; no crash. Appium's logcat copy is capped at 9,999 lines,
+mostly its own, and had no FCM line, so it cannot tell "never delivered" from
+"delivered, not shown". Not known yet: whether `ddd5f82` broke receipt (the
+service replaces the plugin's via `tools:node="remove"`) or FCM was slow or
+flaky for the emulator. The service now logs `AlertMessaging: received …`
+on every message, and a failed test saves `push.txt`: the full logcat's push
+lines and the app's entries from `dumpsys notification`.

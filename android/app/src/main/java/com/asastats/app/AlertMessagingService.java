@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.SystemClock;
+import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
@@ -25,6 +26,8 @@ public class AlertMessagingService extends MessagingService {
     public void onMessageReceived(@NonNull RemoteMessage remoteMessage) {
         super.onMessageReceived(remoteMessage);
         RemoteMessage.Notification notification = remoteMessage.getNotification();
+        // The functional tests read this line to tell "not delivered" from "not shown".
+        Log.i("AlertMessaging", "received " + remoteMessage.getMessageId() + " notification=" + (notification != null));
         if (notification == null || !NotificationManagerCompat.from(this).areNotificationsEnabled()) {
             return;
         }

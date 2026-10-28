@@ -61,8 +61,11 @@ jobs:
           echo "ASASTATS_SIMULATOR=$SIM" >> "$GITHUB_ENV"
 
       # The first session otherwise builds it (~7 min); docs/logbook.md, 2026-10-28.
+      # Appium gives xcrun 15 s; a cold runner's first call can take longer (docs/logbook.md).
       - name: WebDriverAgent build
-        run: appium driver run xcuitest build-wda
+        run: |
+          xcrun --sdk iphonesimulator --show-sdk-version
+          appium driver run xcuitest build-wda || appium driver run xcuitest build-wda
 
       - name: Run on the simulator
         working-directory: functional_tests
