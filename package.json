@@ -26,6 +26,7 @@
     "@capacitor/share": "^8.0.3",
     "@capacitor/splash-screen": "^8.0.2",
     "@capacitor/status-bar": "^8.0.4",
+    "asastats-applock": "file:plugins/applock",
     "asastats-webauth": "file:plugins/webauth"
   },
   "devDependencies": {

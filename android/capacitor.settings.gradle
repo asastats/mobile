@@ -29,5 +29,8 @@ project(':capacitor-splash-screen').projectDir = new File('../node_modules/@capa
 include ':capacitor-status-bar'
 project(':capacitor-status-bar').projectDir = new File('../node_modules/@capacitor/status-bar/android')
 
+include ':asastats-applock'
+project(':asastats-applock').projectDir = new File('../plugins/applock/android')
+
 include ':asastats-webauth'
 project(':asastats-webauth').projectDir = new File('../plugins/webauth/android')

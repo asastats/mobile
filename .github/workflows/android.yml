@@ -52,6 +52,10 @@ jobs:
         working-directory: android
         run: ./gradlew --no-daemon :asastats-webauth:jacocoCoverageCheck
 
+      - name: AppLock plugin tests, 100 % coverage of its logic
+        working-directory: android
+        run: ./gradlew --no-daemon :asastats-applock:jacocoCoverageCheck
+
       # Optional: one kept key, so each debug APK installs over the last (README.md).
       - name: Debug keystore
         env:

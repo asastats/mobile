@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="applock_settings_title">App lock</string>
+    <string name="applock_switch">Lock ASA Stats</string>
+    <string name="applock_note">Asks for your fingerprint, face or screen lock when ASA Stats opens, and when you come back after more than a minute away.</string>
+    <string name="applock_unavailable">Set up a fingerprint, face or screen lock in your phone\'s settings first.</string>
+    <string name="applock_unlock">Unlock</string>
+    <string name="applock_unlock_title">Unlock ASA Stats</string>
+    <string name="applock_enable_title">Turn on the app lock</string>
+    <string name="applock_disable_title">Turn off the app lock</string>
+</resources>
