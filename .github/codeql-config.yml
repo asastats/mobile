@@ -1,0 +1,5 @@
+name: "CodeQL Config"
+paths-ignore:
+  - '**/node_modules/**'  # Ignore dependencies
+queries:
+  - uses: security-extended
