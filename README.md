@@ -1,6 +1,6 @@
 # ASA Stats mobile
 
-[![docs](https://img.shields.io/readthedocs/asastats-mobile/latest)](https://asastats-mobile.readthedocs.io/en/latest/?badge=latest)
+[![tests](https://github.com/asastats/mobile/actions/workflows/tests.yml/badge.svg)](https://github.com/asastats/mobile/actions/workflows/tests.yml) [![android](https://github.com/asastats/mobile/actions/workflows/android.yml/badge.svg)](https://github.com/asastats/mobile/actions/workflows/android.yml) [![ios](https://github.com/asastats/mobile/actions/workflows/ios.yml/badge.svg)](https://github.com/asastats/mobile/actions/workflows/ios.yml) [![functional android](https://github.com/asastats/mobile/actions/workflows/functional.yml/badge.svg)](https://github.com/asastats/mobile/actions/workflows/functional.yml) [![functional ios](https://github.com/asastats/mobile/actions/workflows/functional-ios.yml/badge.svg)](https://github.com/asastats/mobile/actions/workflows/functional-ios.yml) [![docs](https://img.shields.io/readthedocs/asastats-mobile/latest)](https://asastats-mobile.readthedocs.io/en/latest/?badge=latest)
 
 The iOS and Android app "ASA Stats" (`com.asastats.app`). It is a
 [Capacitor 8](https://capacitorjs.com/) shell that loads the live website,

@@ -1136,3 +1136,53 @@ line with the 416932 ms here.
 Third FCM 403 in a row (job `local`, 12:13 UTC, `logs_110260969969`). The
 FCM sender step now prints the key's `project_id` (not secret), so the next
 log shows whether the key belongs to `asa-stats-d0931` or to another project.
+
+Follow-up (Functional run at 13:27 UTC, `logs_110307953866`): the step printed
+`asa-stats-d0931` after the user replaced the key from that project's Firebase
+console, and the 403 is gone: `alerts.push.notify` sent, and logcat shows the
+app receiving the message a second later. The test still failed, for the
+reason in the next entry.
+
+### functional_tests/test_local.py: the push test sends the app home first (2026-10-28)
+
+With the app in the foreground FCM does not draw anything: it hands the
+message to `MessagingService.onMessageReceived`, and
+`@capacitor-firebase/messaging` 8.5.2 on Android only passes it to JS as
+`notificationReceived` (no listener in `app.js`). `presentationOptions` is
+iOS only. So `test_a_push_reaches_the_notification_shade` pressed HOME before
+the send: the shade is the background case, which is the one readers meet.
+The server's message has a `notification` block, which FCM needs to draw it
+by itself.
+
+Correction to the F8 entry above ("Android shows it through FCM's default
+channel"): only when the app is in the background. An alert that arrives
+while the app is open is not shown on Android at all. Open question for the
+user (2026-10-28): show it (a small native `onMessageReceived` override
+that posts the notification, or an in-page notice from `app.js`), or leave
+it.
+
+### functional_tests/test_local.py: the restart test switches to native first (2026-10-28)
+
+`test_a_restart_behind_walletconnect_comes_back_to_the_login_page_and_says_so`
+failed on its first run with "disconnected: not connected to DevTools" right
+after `activate_app`: the session was still in the killed app's
+`WEBVIEW_com.asastats.app.debug`, and `webview()` asking for a context of the
+same name is a no-op in Appium, so chromedriver stayed attached to the dead
+page. Switching to `NATIVE_APP` before `terminate_app` makes the later switch
+attach to the new WebView.
+
+### functional_tests/conftest.py: `IOS_WEBVIEW_GRACE`, relaunch once when Web Inspector missed the app (2026-10-28)
+
+iOS Functional with `e560b4a` (`logs_110307953619`, `appium-log-ios`): no more
+`RemoteDisconnected`; two of the three platform-neutral tests passed. The first
+test's session (276 s, WebDriverAgent's cold start) got only `NATIVE_APP` for
+the whole 60 s: "No applications currently connected" from the remote
+debugger, although the native tree showed the home page loaded. The syslog
+has the app as PID 25752 and `webinspectord` as 26491: the inspector daemon
+started after the app, and a WKWebView registers with it only when it is
+created. The next two sessions relaunched the app and attached at once.
+
+`webview()` on iOS now waits `IOS_WEBVIEW_GRACE` (20 s; one `getContexts`
+takes ~40 s there with `webviewConnectTimeout` 30 s plus 20 retries, so in
+practice one call), then terminates and activates the app once and waits the
+full `TIMEOUT`.

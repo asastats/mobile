@@ -79,7 +79,8 @@ def test_a_restart_behind_walletconnect_comes_back_to_the_login_page_and_says_so
         button,
     )
 
-    # As MIUI does behind the wallet.
+    # As MIUI does behind the wallet. Native first, so the WebView is attached afresh.
+    native(driver)
     driver.terminate_app(PACKAGE)
     driver.activate_app(PACKAGE)
     site_loaded(driver)
@@ -137,6 +138,9 @@ def test_a_push_reaches_the_notification_shade(driver):
     )
     assert result == {"ok": True, "message": "This device is on."}
     title = f"Functional test {os.getpid()}"
+    # FCM draws a notification only for an app in the background (logbook).
+    native(driver)
+    driver.press_keycode(3)  # HOME
 
     manage = Path(os.environ["GITHUB_WORKSPACE"]) / "frontend/website/manage.py"
     sent = subprocess.run(
@@ -145,6 +149,5 @@ def test_a_push_reaches_the_notification_shade(driver):
     )
     assert "sent " in sent.stdout and "sent 0" not in sent.stdout, sent.stdout + sent.stderr
 
-    native(driver)
     driver.open_notifications()
     wait(driver, lambda d: d.find_elements("xpath", f'//*[@text="{title}"]'))

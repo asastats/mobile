@@ -13,6 +13,7 @@ from appium import webdriver
 from appium.common.exceptions import NoSuchContextException
 from appium.options.android import UiAutomator2Options
 from appium.options.ios import XCUITestOptions
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support.ui import WebDriverWait
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -26,6 +27,8 @@ SITE = os.environ.get("ASASTATS_URL", "https://www.asastats.com")
 APPIUM = os.environ.get("APPIUM_URL", "http://127.0.0.1:4723")
 VERSION = json.loads((ROOT / "package.json").read_text())["version"]
 TIMEOUT = 60
+#: iOS: how long to wait for the WebView before relaunching the app once (logbook).
+IOS_WEBVIEW_GRACE = 20
 #: The local suite's account (functional_tests/server/seed.py) and database.
 USER = os.environ.get("APP_TEST_USER", "apptester")
 PASSWORD = os.environ.get("APP_TEST_PASSWORD", "app-tester-pw-1")
@@ -143,6 +146,13 @@ def webview(driver):
             return False  # listed a moment before it can be attached
         return True
 
+    if PLATFORM == "ios":
+        try:
+            return wait(driver, switched, IOS_WEBVIEW_GRACE)
+        except TimeoutException:
+            # Web Inspector started after the app on a cold simulator (logbook)
+            driver.terminate_app(PACKAGE)
+            driver.activate_app(PACKAGE)
     wait(driver, switched)
 
 
