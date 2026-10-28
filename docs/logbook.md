@@ -1186,3 +1186,35 @@ created. The next two sessions relaunched the app and attached at once.
 takes ~40 s there with `webviewConnectTimeout` 30 s plus 20 retries, so in
 practice one call), then terminates and activates the app once and waits the
 full `TIMEOUT`.
+
+### android/app/src/main/java/com/asastats/app/AlertMessagingService.java: alerts while the app is open (2026-10-28)
+
+User's answer to the open question above: show them as a native notification.
+FCM calls `onMessageReceived` for a notification message only when the app
+is in the foreground (in the background it draws the notification itself and
+never calls the service), so the service posts one whenever the message has
+a `notification` block, after `super` has passed it to JS as before.
+
+- **Replaces the plugin's service** in the merged manifest (`tools:node="remove"`
+  on `io.capawesome…MessagingService`); it extends that class, so
+  `tokenReceived` and `notificationReceived` still reach JS. Two services with
+  `MESSAGING_EVENT` would leave the choice to the system.
+- **Tap:** the intent carries the message's data plus `google.message_id`, the
+  extras FCM puts on a background tap, so the plugin's `handleOnNewIntent`
+  reports `notificationActionPerformed` and `push.ts` navigates to `data.url`
+  the same way in both cases.
+- **Channel `alerts` ("Alerts"),** created in `MainActivity.onCreate` and
+  named FCM's `default_notification_channel_id`, so background and foreground
+  alerts share one entry in the system settings. Before this, background ones
+  went to FCM's fallback channel ("Miscellaneous"). `IMPORTANCE_DEFAULT`
+  (shade and sound, no heads-up), as the fallback was.
+- Same tag replaces the earlier alert, as `android.notification.tag` does for
+  FCM's own; small icon and colour are the manifest's FCM defaults.
+- `firebase-messaging` is an `implementation` dependency of the plugin, so the
+  app declares it too, at the plugin's own default version
+  (`firebaseMessagingVersion` in `variables.gradle`, which the plugin reads).
+
+Not compiled here (no Android SDK on this machine): the Android workflow
+checks the build, and the new functional test
+`test_a_push_while_the_app_is_open_is_shown_and_its_tap_opens_the_page`
+checks the notification and its tap on the emulator.

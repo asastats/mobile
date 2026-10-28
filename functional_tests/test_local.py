@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from conftest import PACKAGE, SITE, TIMEOUT, USER, devices, native, sign_in, site_loaded, wait
+from conftest import PACKAGE, SITE, TIMEOUT, USER, devices, native, sign_in, site_loaded, wait, webview
 
 pytestmark = pytest.mark.local
 
@@ -124,11 +124,14 @@ print("sent", notify(user, {{"title": {title!r}, "body": "Delivered to the emula
 """
 
 
-@pytest.mark.skipif(
+needs_fcm = pytest.mark.skipif(
     not (os.environ.get("ASASTATS_PUSH") and os.environ.get("FCM_CREDENTIALS_FILE")),
     reason="no google-services.json or no Firebase service account in CI",
 )
-def test_a_push_reaches_the_notification_shade(driver):
+
+
+def turn_push_on(driver):
+    """Sign in and register this emulator for pushes, as the Profile switch does."""
     sign_in(driver)
     driver.set_script_timeout(TIMEOUT)
     result = driver.execute_async_script(
@@ -137,11 +140,10 @@ def test_a_push_reaches_the_notification_shade(driver):
         DEVICE_URLS,
     )
     assert result == {"ok": True, "message": "This device is on."}
-    title = f"Functional test {os.getpid()}"
-    # FCM draws a notification only for an app in the background (logbook).
-    native(driver)
-    driver.press_keycode(3)  # HOME
 
+
+def send_alert(title):
+    """Send `title` to the test account through the server's real FCM request."""
     manage = Path(os.environ["GITHUB_WORKSPACE"]) / "frontend/website/manage.py"
     sent = subprocess.run(
         [sys.executable, str(manage), "shell", "-c", SEND.format(user=USER, title=title)],
@@ -149,5 +151,36 @@ def test_a_push_reaches_the_notification_shade(driver):
     )
     assert "sent " in sent.stdout and "sent 0" not in sent.stdout, sent.stdout + sent.stderr
 
+
+def in_the_shade(driver, title):
+    """Open the notification shade and return the notification titled `title`."""
     driver.open_notifications()
-    wait(driver, lambda d: d.find_elements("xpath", f'//*[@text="{title}"]'))
+    return wait(driver, lambda d: d.find_elements("xpath", f'//*[@text="{title}"]'))[0]
+
+
+@needs_fcm
+def test_a_push_reaches_the_notification_shade(driver):
+    turn_push_on(driver)
+    # In the background FCM draws it; the open-app case is the next test.
+    native(driver)
+    driver.press_keycode(3)  # HOME
+
+    title = f"Functional test {os.getpid()} background"
+    send_alert(title)
+
+    in_the_shade(driver, title)
+
+
+@needs_fcm
+def test_a_push_while_the_app_is_open_is_shown_and_its_tap_opens_the_page(driver):
+    turn_push_on(driver)
+    assert "/home/" in driver.current_url
+    native(driver)
+
+    title = f"Functional test {os.getpid()} foreground"
+    send_alert(title)
+
+    in_the_shade(driver, title).click()
+    webview(driver)
+    # SEND's url is "/": the tap reaches app.js as notificationActionPerformed.
+    wait(driver, lambda d: d.current_url == f"{SITE}/")

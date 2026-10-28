@@ -15,6 +15,7 @@ public class MainActivity extends BridgeActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         bridge.setWebViewClient(new SiteErrorPagesClient(bridge));
+        AlertMessagingService.createChannel(this);
     }
 
     /** fontScale is in configChanges, and the WebView reads the text size only when created (docs/logbook.md). */

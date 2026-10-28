@@ -2,4 +2,5 @@
 <resources>
     <string name="package_name">com.asastats.app</string>
     <string name="custom_url_scheme">com.asastats.app</string>
+    <string name="notification_channel_alerts">Alerts</string>
 </resources>
