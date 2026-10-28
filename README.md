@@ -1,10 +1,14 @@
 # ASA Stats app
 
+[![docs](https://img.shields.io/readthedocs/asastats-mobile/latest)](https://asastats-mobile.readthedocs.io/en/latest/?badge=latest)
+
 The iOS and Android app "ASA Stats" (`com.asastats.app`). It is a
 [Capacitor 8](https://capacitorjs.com/) shell that loads the live website,
 https://www.asastats.com, and adds native features around it. The website
 recognises the app by the user-agent token `ASAStatsApp/<version> (<ios|android>)`.
 
+Maintenance, signing, releasing and store procedures are in the
+[documentation](https://asastats-mobile.readthedocs.io/en/latest/) (source in `docs/`).
 Why it is built this way, and what each setting guards against, is in
 [`docs/logbook.md`](docs/logbook.md).
 

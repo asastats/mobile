@@ -986,3 +986,82 @@ setup-node v5/v6 cache automatically only from a `packageManager` field
 opt-in `archive: false`. `android-emulator-runner@v2` and `setup-xcode@v1`
 already run on `node24` at their floating tags, so they stay. The frontend
 workflows were already on v6/v7 majors and are not touched here.
+
+### docs/, .readthedocs.yml, requirements-docs.txt: the Sphinx site (2026-10-28)
+
+Built after `frontend/docs/` and `frontend/website/widgets/docs/`: Sphinx with
+`sphinx_rtd_theme`, `fail_on_warning: true` on Read the Docs. The pages are
+the maintenance material that used to live in the workspace's `capacitor/`
+notes (signing, Firebase, server settings, releasing, the beta checklist, the
+store answers) plus a reference page per code area. History stays here.
+
+`docs/conf.py` choices, each of which was a failure mode in the other two
+projects:
+
+- **No `myst_parser`.** `requirements-docs.txt` lists only Sphinx and the
+  theme, so the source is `.rst` and `logbook.md` is in `exclude_patterns`.
+  The logbook is not published.
+- **The icon scripts are loaded by path** (`make_icons`,
+  `make_notification_icon`): their file names have hyphens, so `automodule`
+  cannot import them. The load happens under `autodoc.mock`, because Read the
+  Docs has no Pillow. Appium, Selenium and pytest are mocked for the same
+  reason (`functional_tests/conftest.py`).
+- **Checked in a venv that holds only `requirements-docs.txt`**, with
+  `-W`. A session venv that happens to have Pillow hides the failure Read the
+  Docs would show, which is the frontend's "13 warnings there, 1 here" lesson.
+- **Only Python is autodoc'd.** TypeScript, Java and Swift would need
+  `sphinx-js` or TypeDoc plus `myst_parser`; `docs/webauth.rst` is written by
+  hand for the one native surface web pages can call.
+
+The read-the-docs project itself is created by the user; the README badge
+carries a placeholder slug until it exists.
+
+### plugins/applock: the O2 app lock (2026-10-28)
+
+Design: `capacitor/O2-BIOMETRIC-LOCK-DESIGN.md` in the planning repo, with
+the user's answers (2026-10-28): 1-minute grace, no `FLAG_SECURE`, and **a
+small native settings screen** rather than a switch on a web page. That last
+answer shrank what pages can reach to one call, `AppLock.openSettings()`: the
+switch, and the prompt that confirms each change, live in the native screen
+(`AppLockSettingsActivity`, `AppLockSettingsViewController`), and the
+setting is in SharedPreferences / UserDefaults, out of page script's reach.
+
+- `LockPolicy` (Java and Swift, same tests) holds every decision: locked on a
+  cold start when on; locked again after `GRACE_MS` / `graceSeconds` (60 s)
+  or more in the background, measured on a monotonic clock
+  (`elapsedRealtime`, `systemUptime`) so a clock change cannot unlock;
+  `WAIT` while a prompt is open, because the prompt's own screens (the
+  Android PIN screen is an activity; Face ID makes the app inactive) send the
+  app back and forth; `DISABLED` when the phone has no screen lock any more,
+  so nobody is locked out with no way in but reinstalling.
+- Android: the cover is a view over `android.R.id.content`, added in `load()`
+  (before the first frame on a cold start) and on `onStop`, not `onPause`, so
+  the wallet chooser and other dialogs over the app do not flash it. Back on
+  the cover moves the task back. Recents: `setRecentsScreenshotEnabled(false)`
+  on Android 13+ only, which hides the thumbnail, not screenshots; the
+  Redmi's Android 11 has no such switch, so its Recents can show the page.
+  Our own settings screen stops MainActivity; that is not counted as time
+  away. `BIOMETRIC_WEAK | DEVICE_CREDENTIAL`: STRONG with DEVICE_CREDENTIAL
+  is unsupported before Android 11, and nothing cryptographic is unlocked.
+  `androidx.biometric` 1.1.0 is the latest stable (2026-10-28; the rest are
+  alphas).
+- iOS: the cover goes up on `didEnterBackground`, before the app-switcher
+  snapshot; the decision runs on `didBecomeActive`.
+  `.deviceOwnerAuthentication` (Face ID / Touch ID / passcode), and
+  `NSFaceIDUsageDescription` in Info.plist, without which iOS kills the app
+  on the first Face ID prompt.
+- A deep link or push tap while locked loads under the cover; it shows after
+  unlock.
+
+Checked here: `LockPolicy.java` with JUnit 4.13.2 and JaCoCo 0.8.12 (8 tests,
+100 % lines and branches). Not checked here: everything else (no Android SDK
+or Swift on this machine); CI builds both and runs the Swift tests.
+
+#### Correction, 2026-10-28: `myst_parser` is now in `requirements-docs.txt`
+
+The entry above says the docs have no `myst_parser`. The user added
+`myst-parser` to `requirements-docs.txt` the same day, so `docs/conf.py`
+enables it and accepts `.md` sources. `logbook.md` stays in `exclude_patterns`,
+so it is still not published. Autodoc still covers Python only: a TypeScript
+page would need TypeDoc output the way `frontend/docs/` has it, and nothing
+here generates that yet. The README slug is `asastats-mobile`.

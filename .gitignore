@@ -31,3 +31,6 @@ __pycache__/
 coverage/
 functional_tests/appium.log
 functional_tests/failures/
+
+# Documentation build
+docs/_build/
