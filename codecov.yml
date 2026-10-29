@@ -1,0 +1,4 @@
+# One flag per language; iOS and Android upload only on pushes to main (docs/logbook.md).
+flag_management:
+  default_rules:
+    carryforward: true

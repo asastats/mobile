@@ -23,3 +23,8 @@ def make_icons():
 @pytest.fixture
 def make_notification_icon():
     return _load("make-notification-icon")
+
+
+@pytest.fixture
+def xccov_cobertura():
+    return _load("xccov-cobertura")

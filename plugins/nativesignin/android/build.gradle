@@ -61,17 +61,32 @@ dependencies {
 
 // NativeSignInPlugin only adapts Capacitor and Credential Manager; its logic is
 // in the class checked here, and the sheet on a device is the Appium suite's.
+def coverageClasses = fileTree("$buildDir/intermediates/javac/debug") {
+    include '**/NativeSignInRequest*.class'
+}
+def coverageData = fileTree(buildDir) { include '**/testDebugUnitTest.exec' }
+
 tasks.register('jacocoCoverageCheck', JacocoCoverageVerification) {
     dependsOn 'testDebugUnitTest'
-    executionData.from = fileTree(buildDir) { include '**/testDebugUnitTest.exec' }
+    executionData.from = coverageData
     sourceDirectories.from = files('src/main/java')
-    classDirectories.from = fileTree("$buildDir/intermediates/javac/debug") {
-        include '**/NativeSignInRequest*.class'
-    }
+    classDirectories.from = coverageClasses
     violationRules {
         rule {
             limit { counter = 'LINE'; minimum = 1.0 }
             limit { counter = 'BRANCH'; minimum = 1.0 }
         }
+    }
+}
+
+// The same classes as an XML report, for Codecov (.github/workflows/android.yml).
+tasks.register('jacocoCoverageReport', JacocoReport) {
+    dependsOn 'testDebugUnitTest'
+    executionData.from = coverageData
+    sourceDirectories.from = files('src/main/java')
+    classDirectories.from = coverageClasses
+    reports {
+        xml.required = true
+        html.required = false
     }
 }

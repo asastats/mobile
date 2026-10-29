@@ -1366,3 +1366,38 @@ Capacitor's handler first) they run `window.ASASTATS_RETRY = "<url>";`, the
 URL as a JSON string literal (`JSONObject.quote` / `JSONSerialization`).
 `offline.js` reads that global at the click, with the same-origin check. The
 error page's own failure never replaces the remembered page.
+
+### codecov.yml, scripts/xccov-cobertura.py, the plugins' `jacocoCoverageReport`: coverage on Codecov (2026-10-29)
+
+Every language here already failed CI under 100 % (Jest, pytest, JaCoCo
+`jacocoCoverageCheck`, the `xccov` gate in `ios.yml`), but nothing was
+reported, unlike `frontend` and the widgets repo, which upload to Codecov
+with one flag per part. Now four flags, one per language and part:
+`shell-javascript` (Jest lcov, `tests.yml`), `scripts-python` (pytest XML,
+`tests.yml`), `plugins-java` (JaCoCo XML, `android.yml`), `plugins-swift`
+(Cobertura, `ios.yml`). The report flags are passed on the CI command line,
+not in `jest.config.cjs`/`pytest.ini`, so local runs write no report files.
+
+Each report covers exactly what its gate covers: the Java report shares the
+gate's `coverageClasses` tree, and the Swift report is made from the one file
+each gate checks. The adapter code (each `*Plugin.java`/`.swift`,
+`MainActivity`, `AlertMessagingService`, the app and scene delegates) runs
+only under Appium, which measures no coverage, so it is absent from Codecov
+rather than shown at 0 %.
+
+Swift goes through our own converter because the Codecov action has no
+input for an `.xcresult` (checked against `codecov/codecov-action` `main`
+on 2026-10-29: no `xcode_archive_path`), and its `xcode` plugin would report
+every compiled file. `xcrun xccov view --archive --json --file` gives the
+line counts; the script writes line coverage only (the gate measures lines
+too). Every upload sets `plugins: noop` and `disable_search`, so only the
+named files go up.
+
+`carryforward`: `android.yml` and `ios.yml` run on pushes to `main` only and
+`tests.yml` also on pull requests, so a commit without one of them keeps that
+flag's last numbers instead of dropping it.
+
+Unverified until the first CI run: the shape of the `xccov --json` output
+(a path mapped to a list of `{line, isExecutable, executionCount}`) is from
+memory, not from a run here (no Xcode on this machine). If it differs, the
+converter fails the iOS job after the gate has passed.

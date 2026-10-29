@@ -110,6 +110,8 @@ jobs:
             xcrun xccov view --archive --file "$SOURCE" "$RESULT"
             exit 1
           fi
+          xcrun xccov view --archive --json --file "$SOURCE" "$RESULT" |
+            python3 scripts/xccov-cobertura.py "$GITHUB_WORKSPACE" > "$RUNNER_TEMP/webauth-swift.xml"
 
       - name: AppLock plugin tests
         working-directory: plugins/applock
@@ -136,6 +138,8 @@ jobs:
             xcrun xccov view --archive --file "$SOURCE" "$RESULT"
             exit 1
           fi
+          xcrun xccov view --archive --json --file "$SOURCE" "$RESULT" |
+            python3 scripts/xccov-cobertura.py "$GITHUB_WORKSPACE" > "$RUNNER_TEMP/applock-swift.xml"
 
       - name: NativeSignIn plugin tests
         working-directory: plugins/nativesignin
@@ -162,6 +166,18 @@ jobs:
             xcrun xccov view --archive --file "$SOURCE" "$RESULT"
             exit 1
           fi
+          xcrun xccov view --archive --json --file "$SOURCE" "$RESULT" |
+            python3 scripts/xccov-cobertura.py "$GITHUB_WORKSPACE" > "$RUNNER_TEMP/nativesignin-swift.xml"
+
+      - name: Upload plugins Swift coverage to Codecov
+        uses: codecov/codecov-action@v7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ${{ runner.temp }}/webauth-swift.xml,${{ runner.temp }}/applock-swift.xml,${{ runner.temp }}/nativesignin-swift.xml
+          disable_search: true
+          plugins: noop
+          flags: plugins-swift
+          name: plugins-swift-coverage
 
       - name: Simulator build
         if: ${{ !steps.signing.outputs.key }}

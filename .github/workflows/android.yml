@@ -50,15 +50,25 @@ jobs:
 
       - name: WebAuth plugin tests, 100 % coverage of its logic
         working-directory: android
-        run: ./gradlew --no-daemon :asastats-webauth:jacocoCoverageCheck
+        run: ./gradlew --no-daemon :asastats-webauth:jacocoCoverageCheck :asastats-webauth:jacocoCoverageReport
 
       - name: AppLock plugin tests, 100 % coverage of its logic
         working-directory: android
-        run: ./gradlew --no-daemon :asastats-applock:jacocoCoverageCheck
+        run: ./gradlew --no-daemon :asastats-applock:jacocoCoverageCheck :asastats-applock:jacocoCoverageReport
 
       - name: NativeSignIn plugin tests, 100 % coverage of its logic
         working-directory: android
-        run: ./gradlew --no-daemon :asastats-nativesignin:jacocoCoverageCheck
+        run: ./gradlew --no-daemon :asastats-nativesignin:jacocoCoverageCheck :asastats-nativesignin:jacocoCoverageReport
+
+      - name: Upload plugins Java coverage to Codecov
+        uses: codecov/codecov-action@v7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: plugins/webauth/android/build/reports/jacoco/jacocoCoverageReport/jacocoCoverageReport.xml,plugins/applock/android/build/reports/jacoco/jacocoCoverageReport/jacocoCoverageReport.xml,plugins/nativesignin/android/build/reports/jacoco/jacocoCoverageReport/jacocoCoverageReport.xml
+          disable_search: true
+          plugins: noop
+          flags: plugins-java
+          name: plugins-java-coverage
 
       # Optional: one kept key, so each debug APK installs over the last (README.md).
       - name: Debug keystore

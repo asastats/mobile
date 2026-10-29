@@ -34,3 +34,5 @@ functional_tests/failures/
 
 # Documentation build
 docs/_build/
+coverage-*.xml
+plugins/*/android/build/
