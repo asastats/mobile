@@ -1401,3 +1401,28 @@ Unverified until the first CI run: the shape of the `xccov --json` output
 (a path mapped to a list of `{line, isExecutable, executionCount}`) is from
 memory, not from a run here (no Xcode on this machine). If it differs, the
 converter fails the iOS job after the gate has passed.
+
+### package.json, ios/App/CapApp-SPM/Package.swift: Capacitor 8.5.3 -> 8.6.0 (2026-10-29)
+
+8.6.0 (released 2026-10-28) fixes R8 removing plugin callbacks and
+annotation types (Android; our release build has `minifyEnabled false`, so
+it did not bite here) and bumps the CLI's `xcode` to ^4, which clears the
+`uuid` finding from the `npm audit` entry above. Nothing is marked breaking
+and nothing changed in `core`. `npx cap sync` regenerates the SPM manifest
+with the same `exact: "8.6.0"`; `capacitor-swift-pm` has the tag. Left in
+`npm audit`: seven low findings, all Jest's `deepmerge` (dev only).
+Capacitor 9 (O4) is at `9.0.0-beta.0` and `@capacitor-firebase/messaging`
+has no 9.x, so it waits.
+
+### android/app/src/main/java/com/asastats/app/MainActivity.java `onPause`: flush cookies (2026-10-29)
+
+Problem 5 (workspace `capacitor/BETA-ADB-RESULTS.md`): the app was signed out
+twice with an older `sessionid` cookie still in the WebView. Chromium writes
+cookies to disk in batches, and nothing in Capacitor or this app called
+`CookieManager.flush()` (Capacitor flushes only in its CapacitorCookies and
+Cordova paths, both unused here). A sign-in deletes the previous session, so
+a process killed before the batch comes back with a dead cookie. Leading
+explanation, not proven; the server now logs which cookie came back (frontend
+logbook, `core.sessiontrace`). `flush()` blocks on disk I/O, which is why it
+runs on pause and not after every page. iOS's WKWebView keeps cookies
+out of process and was never seen to lose a sign-in.

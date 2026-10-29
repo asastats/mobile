@@ -2,6 +2,7 @@ package com.asastats.app;
 
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.webkit.CookieManager;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
@@ -18,6 +19,13 @@ public class MainActivity extends BridgeActivity {
         super.onCreate(savedInstanceState);
         bridge.setWebViewClient(new SiteErrorPagesClient(bridge));
         AlertMessagingService.createChannel(this);
+    }
+
+    /** The WebView writes cookies to disk lazily; a killed app would come back with an older session (docs/logbook.md). */
+    @Override
+    public void onPause() {
+        super.onPause();
+        CookieManager.getInstance().flush();
     }
 
     /** fontScale is in configChanges, and the WebView reads the text size only when created (docs/logbook.md). */
