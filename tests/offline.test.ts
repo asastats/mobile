@@ -68,11 +68,47 @@ describe("offline.html", () => {
 });
 
 describe("offline.js", () => {
-  beforeEach(() => {
+  type Page = { ASASTATS_URL?: string; ASASTATS_RETRY?: unknown };
+  /** Load the script on an offline page that native code told `failed`. */
+  const load = (failed?: unknown) => {
     document.body.innerHTML = '<button id="retry">Retry</button>';
     Object.defineProperty(window, "location", { value: { href: "" }, writable: true });
-    delete (window as { ASASTATS_URL?: string }).ASASTATS_URL;
+    (window as Page).ASASTATS_RETRY = failed;
     jest.isolateModules(() => require("../offline/offline.js"));
+  };
+  const retry = (failed: unknown, site?: string) => {
+    if (site) (window as Page).ASASTATS_URL = site;
+    load(failed);
+    document.getElementById("retry")!.click();
+    return window.location.href;
+  };
+
+  beforeEach(() => {
+    delete (window as { ASASTATS_URL?: string }).ASASTATS_URL;
+    load();
+  });
+
+  it("returns to the page that failed to load", () => {
+    const failed = "https://www.asastats.com/about/?tab=2#team";
+    expect(retry(failed)).toBe(failed);
+  });
+
+  it("returns to a failed page of a local server too", () => {
+    expect(
+      retry("http://192.168.1.20:8000/faq/", "http://192.168.1.20:8000")
+    ).toBe("http://192.168.1.20:8000/faq/");
+  });
+
+  it.each([
+    ["another site", "https://evil.example/"],
+    ["a look-alike host", "https://www.asastats.com.evil.example/"],
+    ["a script URL", "javascript:alert(1)"],
+    ["not a URL", "nonsense"],
+    ["an empty value", ""],
+    ["no value", undefined],
+    ["not a string", { href: "https://www.asastats.com/x/" }],
+  ])("opens the start page for %s", (_, failed) => {
+    expect(retry(failed)).toBe("https://www.asastats.com");
   });
 
   it("retries the server URL the page sets", () => {

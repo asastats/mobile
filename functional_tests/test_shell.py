@@ -100,13 +100,20 @@ def test_a_missing_page_shows_the_sites_404_not_no_connection(driver):
 @pytest.mark.android
 def test_offline_shows_retry_and_retry_comes_back(driver):
     site_loaded(driver)
+    driver.get(f"{SITE}/faq/")
+    site_loaded(driver)
     native(driver)
     driver.execute_script("mobile: setConnectivity", {"wifi": False, "data": False})
     try:
         webview(driver)
-        driver.execute_script("window.location.reload();")
-        wait(driver, lambda d: d.execute_script("return !!document.getElementById('retry');"))
+        # A link to another page fails: native code tells offline.html, for Retry.
+        driver.execute_script(
+            "var a = document.createElement('a'); a.href = '/about/';"
+            "document.body.appendChild(a); a.click();"
+        )
+        wait(driver, offline_page_shown)
         assert "No connection" in driver.page_source
+        wait(driver, lambda d: retry_target(d).endswith("/about/"))
     finally:
         native(driver)
         driver.execute_script("mobile: setConnectivity", {"wifi": True, "data": True})
@@ -115,6 +122,23 @@ def test_offline_shows_retry_and_retry_comes_back(driver):
     webview(driver)
     wait(driver, retried)
     site_loaded(driver)
+    assert driver.execute_script("return location.pathname;") == "/about/"
+
+
+def offline_page_shown(driver):
+    """True once offline.html is up; false while the WebView is still switching to it."""
+    try:
+        return driver.execute_script("return !!document.getElementById('retry');")
+    except WebDriverException:
+        return False
+
+
+def retry_target(driver):
+    """The page offline.html's Retry will open; empty until native code has set it."""
+    try:
+        return driver.execute_script("return window.ASASTATS_RETRY || '';")
+    except WebDriverException:
+        return ""
 
 
 def retried(driver):

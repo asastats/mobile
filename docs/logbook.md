@@ -1300,3 +1300,69 @@ The entry above pinned `GoogleSignIn` at `from: "8.0.0"` on the belief that
 notes put custom-nonce support in 9.0.0, and 10.1.0 fixes a nonce dropped
 after a Device Policy restart; 10.x needs iOS 15, which is already ours. The
 range is now `"9.2.0"..<"11.0.0"`.
+
+### offline/offline.js, MainActivity `SiteErrorPagesClient.onReceivedError`, SceneDelegate `AppViewController`: Retry returns to the failed page (2026-10-29)
+
+User's wish after the Redmi offline rows: Retry opened the start page, so a
+reader who tapped a link while offline lost their place. Capacitor loads the
+bare `errorPath` on both platforms and passes nothing on, so the native side
+now appends `?retry=<failed main-frame URL>` and `offline.js` follows it
+**only when its origin is the server URL's** (anything else, a look-alike
+host, `javascript:`, a missing or broken value: the start page, as before).
+
+- Android: `SiteErrorPagesClient.onReceivedError` replaces Capacitor's (not
+  `super`, which would load the bare page first), keeps its listener calls,
+  main frame only. `BridgeWebViewClient.bridge` is private, hence the
+  subclass's own field.
+- iOS: `CAPBridgeViewController` builds its `WebViewDelegationHandler`
+  privately, so `AppViewController.capacitorDidLoad` puts
+  `OfflineRetryDelegate` in front of it: `didFail` and
+  `didFailProvisionalNavigation` load the error page with the query (failed
+  URL from `NSURLErrorFailingURLErrorKey`), every other selector is forwarded
+  (`responds(to:)` + `forwardingTarget`). Not forwarding the two failure calls
+  skips Capacitor's `isOpaque` reset on a failed *initial* load; its
+  `didFinish` for the offline page resets it. The query value is encoded by
+  hand: `URLComponents.queryItems` leaves `&` and `=` unencoded. Kept in
+  `SceneDelegate.swift` so the Xcode project needs no new file; the
+  storyboard's controller class is `AppViewController` too.
+- Checked here: Jest (offline.js 100 %). Java and Swift only in CI; the
+  Android Appium offline test now fails a link to `/about/` and expects Retry
+  to land there.
+
+#### Correction, same day: no WebViewListener calls in `onReceivedError`
+
+The entry above says the override "keeps its listener calls". It could not:
+`Bridge.getWebViewListeners()` is package-private, and the Android build of
+`e73de51` failed on it ("not public in Bridge; cannot be accessed from
+outside package"). The calls are dropped. Nothing is lost today: the only
+`WebViewListener` in this app is Capacitor's SystemBars one, which overrides
+`onPageCommitVisible` only (Capacitor 8.5.3; none in our or the other
+plugins). Re-check if a plugin that listens for `onReceivedError` is added.
+
+#### Correction, same day: `#retry=`, not `?retry=`, and no wrapping of the error page
+
+The Android live Appium run of `3d5510c` crashed the app with an
+`OutOfMemoryError` in `retryUrl` (`Uri.encode` of an ever longer string).
+`WebViewLocalServer.isErrorUrl` serves errorPath only when the request URL
+*equals* `bridge.getErrorUrl()`; `offline.html?retry=…` did not, so it went
+to the network, failed offline, and `onReceivedError` wrapped that failed
+URL in another `?retry=`, again and again. Now the failed page goes in the
+fragment (WebView does not send fragments, so the request is the exact error
+URL), and a failed URL that is the error page itself gives the bare error
+page, on both platforms, so no failure can loop. `offline.js` reads
+`location.hash`. The Appium wait for the offline page also tolerates the
+"loader has changed" error while the WebView switches pages.
+
+#### Correction, same day: the failed page reaches offline.html by script, not in its URL
+
+`#retry=` did not help either: the Android live run of `08dbd2a` showed
+"Webpage not available … `https://localhost/offline.html#retry=…` …
+`ERR_CONNECTION_REFUSED`". The URL the local server compares with
+`getErrorUrl()` keeps the fragment, so any change to the error page's URL
+sends it to the network. The loop guard held (no crash). Now both platforms
+load the bare errorPath and remember the failed page; once the error page has
+finished loading (`onPageFinished` / `didFinish`, the latter forwarded to
+Capacitor's handler first) they run `window.ASASTATS_RETRY = "<url>";`, the
+URL as a JSON string literal (`JSONObject.quote` / `JSONSerialization`).
+`offline.js` reads that global at the click, with the same-origin check. The
+error page's own failure never replaces the remembered page.

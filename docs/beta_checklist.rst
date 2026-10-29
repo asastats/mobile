@@ -50,31 +50,31 @@ First launch and the shell
    * - Install, open: splash shows the wordmark, then the home page; splash never sticks
      -
      -
-     -
+     - ✓
      -
      -
    * - App name under the icon is "ASA Stats"; icon looks right (Android: round and squircle masks)
      -
      -
-     -
+     - ✓
      -
      -
    * - Status bar and notch / home indicator: nothing covered at the top or bottom
      -
      -
-     -
+     - ✓
      -
      -
    * - Rotate to landscape and back (iPad especially): layout holds
      -
      -
-     -
+     - ✓
      -
      -
    * - Android back: closes an open dialog first, then goes back a page, on the first page sends the app to the background
      - n/a
      - n/a
-     -
+     - ✓
      -
      -
 
@@ -96,13 +96,13 @@ Open each, scroll to the bottom, tap one link. Check nothing overlaps, nothing i
    * - Home ``/`` and ``/home/``
      -
      -
-     -
+     - ✓
      -
      -
    * - An address page (58-character address)
      -
      -
-     -
+     - ✓
      -
      -
    * - The same address in the dynamic and dynamic compact layouts
@@ -114,19 +114,19 @@ Open each, scroll to the bottom, tap one link. Check nothing overlaps, nothing i
    * - A ``.algo`` name
      -
      -
-     -
+     - ✓
      -
      -
    * - A bundle page (40-character id)
      -
      -
-     -
+     - ✓
      -
      -
    * - An NFT collection on an address
      -
      -
-     -
+     - ✓
      -
      -
    * - Profile: settings, appearance, account, addresses, link an address, API, authorize
@@ -144,7 +144,7 @@ Open each, scroll to the bottom, tap one link. Check nothing overlaps, nothing i
    * - Export
      -
      -
-     -
+     - ✓
      -
      -
    * - FAQ, Features, About, Methodology, Tokenomics, Disclaimer, sitemap
@@ -156,19 +156,19 @@ Open each, scroll to the bottom, tap one link. Check nothing overlaps, nothing i
    * - Subscriptions: plans shown as information, no subscribe buttons or steps
      -
      -
-     -
+     - ✓
      -
      -
    * - ``/asm-privacy/`` and ``/account-deletion/``
      -
      -
-     -
+     - ✓
      -
      -
    * - A page that does not exist: the site's "not found", not "No connection"
      -
      -
-     -
+     - ✓
      -
      -
 
@@ -200,7 +200,7 @@ No buying in the app (App Review rejects this)
    * - No ASASTATS price or "subscribe" text on any page above
      -
      -
-     -
+     - accepted
      -
      -
 
@@ -302,13 +302,13 @@ Sign-in, sign-out, account
    * - Google: Google's own sheet (Android, iOS); a phone without a Google account falls back to the browser sheet
      -
      -
-     -
+     - ✓
      -
      -
    * - Connections: connect Google from the app (Google's sheet); without the sheet, "Connect Google on the website"
      -
      -
-     -
+     - ✓
      -
      -
    * - Connections (iOS): connect Apple with Apple's sheet
@@ -368,25 +368,25 @@ Sign-in, sign-out, account
    * - Pera wallet sign-in
      -
      -
-     -
+     - ✓
      -
      -
    * - Defly wallet sign-in
      -
      -
-     -
+     - ✓
      -
      -
    * - Kibisis and Lute are not offered
      -
      -
-     -
+     - ✓
      -
      -
    * - WalletConnect / EVM, or absent
      -
      -
-     -
+     - ✓
      -
      -
    * - Close the app fully, reopen: still signed in
@@ -450,13 +450,13 @@ Alerts and notifications
    * - Test notification from the server arrives (app in the foreground; Android shows it in the shade too, and its tap opens the page)
      -
      -
-     -
+     - ✓
      -
      -
    * - … with the app in the background
      -
      -
-     -
+     - ✓
      -
      -
    * - … with the app closed (swiped away): tap opens the right page
@@ -468,7 +468,7 @@ Alerts and notifications
    * - Android: Settings > Apps > ASA Stats > Notifications lists one "Alerts" channel
      -
      -
-     -
+     - ✓
      -
      -
    * - A real rule fires (price or total crossing): notification arrives, tap opens the page
@@ -512,19 +512,19 @@ App lock
    * - Footer "App lock" opens the native settings screen; turning it on asks for Face ID, fingerprint or the screen lock
      -
      -
-     -
+     - ✓
      -
      -
    * - Close the app fully, reopen: the lock asks before the page shows
      -
      -
-     -
+     - ✓
      -
      -
    * - Away less than a minute: no prompt; a minute or more: the prompt
      -
      -
-     -
+     - ✓
      -
      -
    * - A push tap or a deep link while locked: the page shows after unlocking
@@ -542,7 +542,7 @@ App lock
    * - Turning it off asks again; nothing on a web page can turn it off
      -
      -
-     -
+     - ✓
      -
      -
 
@@ -601,19 +601,19 @@ Links
    * - Another site's link (explorer, Vestige, footer social icon): opens in a browser sheet; closing it returns to the app
      -
      -
-     -
+     - ✓
      -
      -
    * - On an address page, a link to another site (a listed NFT): close the sheet with its X, then again with Back. Both times the app is back on that address page, not the home page
      -
      -
-     -
+     - ✓
      -
      -
    * - A ``https://www.asastats.com/faq/`` link tapped in Messages / Keep: opens in the app
      -
      -
-     -
+     - n/a
      -
      -
    * - A same-site link that opens a new tab: opens in place
@@ -637,19 +637,19 @@ Links
    * - Android 11 or older: an address link tapped in Messages / Keep opens in the app (only the 58-character address pattern; other links open in the browser there)
      -
      -
-     -
+     - ✓
      -
      -
    * - The same with the app closed
      -
      -
-     -
+     - ✓
      -
      -
    * - ``https://www.asastats.com/accounts/login/`` link tapped in Notes/Messages: opens in the browser, not the app (excluded on purpose)
      -
      -
-     -
+     - ✓
      -
      -
 
@@ -669,25 +669,25 @@ Offline
    * - Airplane mode, open the app: "No connection" page
      -
      -
-     -
+     - ✓
      -
      -
    * - Retry while offline: same page again
      -
      -
-     -
+     - ✓
      -
      -
    * - Back online, Retry: the site loads
      -
      -
+     - ✓
      -
      -
-     -
-   * - Go offline while on a page, tap a link: "No connection"; back online, Retry
-     -
+   * - Go offline while on a page, tap a link: "No connection"; back online, Retry: the page the link went to
      -
      -
+     - ✓
      -
      -
 
@@ -707,13 +707,13 @@ Themes and appearance
    * - Phone in dark mode: the site follows; status bar text readable
      -
      -
-     -
+     - ✓
      -
      -
    * - Phone in light mode: same
      -
      -
-     -
+     - ✓
      -
      -
    * - Change the theme in the profile (a light and a dark one): status bar follows
@@ -751,7 +751,7 @@ Haptics and small things
    * - Pull the page down at the top: nothing odd (no blank screen)
      -
      -
-     -
+     - ✓
      -
      -
    * - Leave the app for an hour, come back: the page works (sign-in kept, widgets update)
