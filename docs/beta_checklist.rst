@@ -293,13 +293,25 @@ Sign-in, sign-out, account
      -
      -
      -
-   * - Sign in with Apple
+   * - Sign in with Apple. iOS: Apple's own sheet, no browser; Android: the browser sheet
      -
      -
      -
      -
      -
-   * - Google
+   * - Google: Google's own sheet (Android, iOS); a phone without a Google account falls back to the browser sheet
+     -
+     -
+     -
+     -
+     -
+   * - Connections: connect Google from the app (Google's sheet); without the sheet, "Connect Google on the website"
+     -
+     -
+     -
+     -
+     -
+   * - Connections (iOS): connect Apple with Apple's sheet
      -
      -
      -
@@ -329,13 +341,13 @@ Sign-in, sign-out, account
      -
      -
      -
-   * - Social sign-in on Android without Chrome 137+ as the default browser: the "needs Chrome 137" message, and email/wallet sign-in still work
+   * - Social sign-in on Android without Chrome 137+ as the default browser: the "needs Chrome 137" message for Discord, X, Reddit, GitHub and Apple; Google still works (its own sheet); email/wallet sign-in still work
      -
      -
      -
      -
      -
-   * - Social sign-in on iOS before 17.4: the "needs iOS 17.4" message
+   * - Social sign-in on iOS before 17.4: the "needs iOS 17.4" message for Discord, X, Reddit and GitHub; Apple and Google still work (their own sheets)
      -
      -
      -
@@ -435,7 +447,7 @@ Alerts and notifications
      -
      -
      -
-   * - Test notification from the server arrives (app in the foreground)
+   * - Test notification from the server arrives (app in the foreground; Android shows it in the shade too, and its tap opens the page)
      -
      -
      -
@@ -448,6 +460,12 @@ Alerts and notifications
      -
      -
    * - … with the app closed (swiped away): tap opens the right page
+     -
+     -
+     -
+     -
+     -
+   * - Android: Settings > Apps > ASA Stats > Notifications lists one "Alerts" channel
      -
      -
      -
@@ -477,6 +495,57 @@ Alerts and notifications
      -
      -
      -
+
+App lock
+--------
+
+.. list-table::
+   :header-rows: 1
+   :widths: 34 13 13 13 13 13
+
+   * - Check
+     - iP
+     - iPad
+     - A
+     - As
+     - Ao
+   * - Footer "App lock" opens the native settings screen; turning it on asks for Face ID, fingerprint or the screen lock
+     -
+     -
+     -
+     -
+     -
+   * - Close the app fully, reopen: the lock asks before the page shows
+     -
+     -
+     -
+     -
+     -
+   * - Away less than a minute: no prompt; a minute or more: the prompt
+     -
+     -
+     -
+     -
+     -
+   * - A push tap or a deep link while locked: the page shows after unlocking
+     -
+     -
+     -
+     -
+     -
+   * - App switcher / Recents does not show the page while locked (Android 13+, iOS)
+     -
+     -
+     -
+     -
+     -
+   * - Turning it off asks again; nothing on a web page can turn it off
+     -
+     -
+     -
+     -
+     -
+
 
 Exports and sharing
 -------------------

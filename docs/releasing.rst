@@ -13,10 +13,10 @@ Workflows
    * - ``android.yml``
      - Always a debug APK (``com.asastats.app.debug``, "ASA Stats dev"), artifact
        ``asastats-debug-apk``. With the keystore secrets, also a signed ``.aab``,
-       artifact ``asastats-release-aab``. The WebAuth plugin tests run first.
+       artifact ``asastats-release-aab``. The plugin tests (WebAuth, AppLock, NativeSignIn) run first.
    * - ``ios.yml``
      - Without the App Store Connect secrets, a simulator compile. With them, an archive
-       that is signed and uploaded to TestFlight. The WebAuth plugin tests run first.
+       that is signed and uploaded to TestFlight. The plugin tests (WebAuth, AppLock, NativeSignIn) run first.
    * - ``tests.yml``
      - Jest and pytest.
    * - ``functional.yml``, ``functional-ios.yml``

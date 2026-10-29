@@ -1289,3 +1289,14 @@ account on the phone), which `signIn.ts` turns into the F4 fallback.
   plugin refuses with `invalid` and the page says "Sign-in did not finish";
   that proves the armed Connections button, the nonce endpoint and the bridge.
   A real sign-in needs a Google account: the Redmi (O3 user steps C2).
+
+#### Correction, 2026-10-29: GoogleSignIn 9.0.0, not 7.1, has the nonce
+
+The entry above pinned `GoogleSignIn` at `from: "8.0.0"` on the belief that
+`signIn(withPresenting:hint:additionalScopes:nonce:completion:)` exists since
+7.1. It does not: both iOS workflows resolved 8.0.0 and failed to compile
+("extra arguments at positions #4, #5"; 8.0.0 has only
+`signIn(withPresenting:hint:additionalScopes:completion:)`). Google's release
+notes put custom-nonce support in 9.0.0, and 10.1.0 fixes a nonce dropped
+after a Device Policy restart; 10.x needs iOS 15, which is already ours. The
+range is now `"9.2.0"..<"11.0.0"`.

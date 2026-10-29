@@ -161,7 +161,9 @@ right of the page. Until you save, none of the ticks count.
 * Push Notifications. The Configure button opens the SSL Certificates dialog. Create
   nothing and press Done, because the app sends through Firebase with an APNs key.
 * Sign in with Apple. Choose "Enable as a primary App ID" and leave the server-to-server
-  endpoint empty.
+  endpoint empty. The website's sign-in uses it through its Services ID, and the app's
+  native sheet (:doc:`nativesignin`) through the ``com.apple.developer.applesignin``
+  entitlement in ``App.entitlements``.
 * Associated Domains. Ticking the box is all of it. The domain list lives in the app's
   entitlements.
 

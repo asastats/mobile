@@ -2,7 +2,9 @@ WebAuth plugin
 ==============
 
 Google refuses sign-in inside a WebView. The local plugin in ``plugins/webauth/`` opens the system browser
-sheet for a social sign-in and hands a one-time ticket back to the page. It ships as a
+sheet for a social sign-in and hands a one-time ticket back to the page. Apple on iOS and
+Google use their native sheets instead where the phone has one (:doc:`nativesignin`);
+WebAuth handles the other providers and is the fallback for those two. It ships as a
 local npm package (``asastats-webauth``) with a Java implementation for Android and a
 Swift one for iOS.
 
@@ -83,7 +85,8 @@ Android with Chrome 137 or later
 Devices that cannot verify, which means iOS 15 to 17.3 and Android with another default
 browser or an older Chrome, get the ``unsupported`` rejection. The page then says that
 social sign-in needs iOS 17.4 or Chrome 137 and offers email or wallet sign-in. No
-custom-scheme fallback exists, on purpose.
+custom-scheme fallback exists, on purpose. Apple on iOS and Google do not depend on
+this: their native sheets (:doc:`nativesignin`) work on those devices too.
 
 Working on it
 -------------

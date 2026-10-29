@@ -11,8 +11,8 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/ionic-team/capacitor-swift-pm.git", from: "8.0.0"),
-        // signIn(withPresenting:hint:additionalScopes:nonce:) needs 7.1+.
-        .package(url: "https://github.com/google/GoogleSignIn-iOS.git", from: "8.0.0")
+        // The nonce argument of signIn(withPresenting:...) arrived in 9.0.0; see docs/logbook.md.
+        .package(url: "https://github.com/google/GoogleSignIn-iOS.git", "9.2.0"..<"11.0.0")
     ],
     targets: [
         .target(

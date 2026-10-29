@@ -31,6 +31,18 @@ with Selenium using the app's user-agent token. This repository tests the shell.
    * - WebAuth plugin, iOS
      - XCTest and ``xccov``
      - ``xcodebuild test -scheme AsastatsWebauth`` in ``plugins/webauth``
+   * - AppLock plugin, Android
+     - JUnit and JaCoCo
+     - ``./gradlew :asastats-applock:jacocoCoverageCheck`` in ``android/``
+   * - AppLock plugin, iOS
+     - XCTest and ``xccov``
+     - ``xcodebuild test -scheme AsastatsApplock`` in ``plugins/applock``
+   * - NativeSignIn plugin, Android
+     - JUnit and JaCoCo
+     - ``./gradlew :asastats-nativesignin:jacocoCoverageCheck`` in ``android/``
+   * - NativeSignIn plugin, iOS
+     - XCTest and ``xccov``
+     - ``xcodebuild test -scheme AsastatsNativesignin`` in ``plugins/nativesignin``
    * - The installed app
      - Appium
      - see below
@@ -75,9 +87,11 @@ The tests are in ``functional_tests/`` and carry three markers:
 ``local``
     The debug app against a Django server that CI starts from the frontend repository
     with a test database (``functional_tests/server/``). Email sign-in, account
-    deletion with its captcha, connections, a social button through the WebAuth bridge,
-    push registration and unregistration checked in the database, and a delivered
-    notification when the ``FCM_SERVICE_ACCOUNT_BASE64`` secret exists.
+    deletion with its captcha, the Connections page's Google button through the
+    NativeSignIn bridge, a social button through the WebAuth bridge, the EVM wallet
+    hand-off after a restart, push registration and unregistration checked in the
+    database, and a delivered notification, in the background and with the app open,
+    when the ``FCM_SERVICE_ACCOUNT_BASE64`` secret exists.
 
 ``android``
     Android only: Back, App Links, the browser sheet, connectivity. Skipped on iOS.
@@ -113,7 +127,9 @@ Web Inspector lists the app as ``process-App``. The suite passes
 What stays manual
 -----------------
 
-Real Google, Apple and X sign-ins block automation with bot checks. The Pera and Defly
+Real Google, Apple and X sign-ins block automation with bot checks, and the native
+sheets need a real account on the phone. The app lock's Face ID or fingerprint prompt
+needs a person too. The Pera and Defly
 hand-off needs the wallet apps and a funded account. A push arriving on a locked phone
 and a store build installed from Play or TestFlight cannot be scripted either. These
 rows live in :doc:`beta_checklist`.
@@ -125,5 +141,6 @@ Adding a test
   when the feature works against production without an account.
 * A new Python helper in ``scripts/`` needs a pytest case. The coverage gate will say
   which lines are missing.
-* A new native branch in the plugin needs a case against the fake adapter.
+* A new native branch in a plugin needs a case in its pure class (``WebAuthController``,
+  ``LockPolicy``, ``NativeSignInRequest``) or against the fake adapter.
 * Wait with ``wait(driver, predicate)`` from ``functional_tests/conftest.py``.

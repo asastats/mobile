@@ -157,7 +157,10 @@ Then send a test notification from the site's Django shell, with a real account'
     print(notify(user, {"title": "ASA Stats", "body": "Test", "url": "/faq/"}))
 
 It prints how many browsers and phones it reached. Tapping the notification must open
-``/faq/``, with the app in the foreground, in the background and swiped away. After you
+``/faq/``, with the app in the foreground, in the background and swiped away. On
+Android, an alert that arrives while the app is open is shown as a notification too
+(``AlertMessagingService``), and both kinds share one "Alerts" channel in the system's
+notification settings for the app. After you
 log out in the app, the same command must no longer count the phone.
 
 
@@ -167,4 +170,6 @@ Content security policy and firewall
 The nginx ``form-action`` directive must allow ``https://appleid.apple.com``. Nothing
 else changes for the app: FCM is called by the server and not the page, and the host
 firewall already allows outgoing traffic to ``fcm.googleapis.com`` and
-``oauth2.googleapis.com``.
+``oauth2.googleapis.com``. Native sign-in (:doc:`nativesignin`) adds server-side calls
+only: Apple's and Google's signing keys and ``appleid.apple.com/auth/token`` for the
+Apple code exchange. The page posts only to the site itself.

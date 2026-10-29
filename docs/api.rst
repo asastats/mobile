@@ -3,7 +3,7 @@ API reference
 
 The Python in this repository: two asset scripts and the helpers of the Appium suite. The
 shell's TypeScript, the offline page script and the native plugin sources are described in
-:doc:`development` and :doc:`webauth`.
+:doc:`development`, :doc:`webauth`, :doc:`nativesignin` and :doc:`applock`.
 
 Icon and splash generator
 -------------------------

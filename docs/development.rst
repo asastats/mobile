@@ -126,10 +126,11 @@ page on that origin can call every plugin the app registers. A cross-site script
 hole on www.asastats.com would therefore reach the device.
 
 * Register only the plugins in ``package.json``: App, Browser, SplashScreen, StatusBar,
-  Share, Filesystem, Preferences, Haptics, FirebaseMessaging and the local WebAuth
-  plugin.
+  Share, Filesystem, Preferences, Haptics, FirebaseMessaging and the local WebAuth,
+  AppLock and NativeSignIn plugins.
 * Never add an HTTP plugin, broad filesystem access or anything that reads other apps'
   data.
-* A plugin method trusts nothing from JavaScript. :doc:`webauth` shows what that
-  looks like.
+* A plugin method trusts nothing from JavaScript. :doc:`webauth` and
+  :doc:`nativesignin` show what that looks like; :doc:`applock` keeps its only
+  setting out of JavaScript's reach altogether.
 * Revisit this list before the website admits a third-party widget.
