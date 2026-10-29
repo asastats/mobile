@@ -401,6 +401,12 @@ Sign-in, sign-out, account
      -
      -
      -
+   * - Sign in, switch to another app within a few seconds, close ASA Stats from the recent apps, reopen: still signed in
+     -
+     -
+     -
+     -
+     -
    * - Sign out: signed out, and section 6 "sign-out" row passes
      -
      -
@@ -717,6 +723,12 @@ Themes and appearance
      -
      -
    * - Change the theme in the profile (a light and a dark one): status bar follows
+     -
+     -
+     -
+     -
+     -
+   * - A very large address (``MVEKYHFLJ63UKDYGNKCJD7WO5KFJZFVFMJPSDAWLDIDP4LUP575YDOW6GI``, about 3,600 assets): opens, scrolls, sorting and pinning respond
      -
      -
      -

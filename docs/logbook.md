@@ -1426,3 +1426,11 @@ explanation, not proven; the server now logs which cookie came back (frontend
 logbook, `core.sessiontrace`). `flush()` blocks on disk I/O, which is why it
 runs on pause and not after every page. iOS's WKWebView keeps cookies
 out of process and was never seen to lose a sign-in.
+
+#### Verified on the Redmi, same day (APK 115107)
+
+A test cookie set and then force-stopped with no pause was gone after the
+relaunch 3 times of 3; with Home first (`onPause`), then a force-stop 2 s
+later, it was kept 3 of 3 (workspace `capacitor/BETA-ADB-RESULTS.md`). The
+lazy write is real and the flush covers an app killed in the background.
+Whether the two sign-outs were this is still for the server trace to show.
