@@ -1256,3 +1256,36 @@ service replaces the plugin's via `tools:node="remove"`) or FCM was slow or
 flaky for the emulator. The service now logs `AlertMessaging: received …`
 on every message, and a failed test saves `push.txt`: the full logcat's push
 lines and the app's entries from `dumpsys notification`.
+
+### NativeSignIn plugin: Apple and Google sheets (O3, 2026-10-29)
+
+`plugins/nativesignin`, design `capacitor/O3-NATIVE-SIGNIN-DESIGN.md`.
+Calls: `isAvailable({provider})`, `signIn({provider, nonce, serverClientId})`.
+Rejections share `webauth`'s words plus `unavailable` (Android: no Google
+account on the phone), which `signIn.ts` turns into the F4 fallback.
+
+- **Android**: Credential Manager with `GetSignInWithGoogleOption` (the flow
+  for a tapped button), server client id = the website's Google client, which
+  the server returns with the nonce (no build-time value). Its own Android
+  OAuth clients (package + SHA-1: Play, upload, CI debug as
+  `com.asastats.app.debug`) are only registered in Google Cloud, never sent.
+  No Apple sheet on Android: Apple stays F4 there. `isAvailable` checks that
+  Play services is installed (`<queries>` for `com.google.android.gms`).
+  Dependency versions are pinned in the plugin's `build.gradle`
+  (credentials 1.5.0, googleid 1.1.1).
+- **iOS**: `ASAuthorizationAppleIDProvider` with `SHA-256(nonce)` hex (the
+  server compares the token's claim with it), name and code passed on; the
+  code is exchanged by the server for the refresh token revocation needs.
+  Google through `GoogleSignIn` (SPM, 8.x), `GIDClientID` and its reversed
+  URL scheme in `Info.plist`, the nonce passed as is; the SDK's own session is
+  signed out at once, the website's is the one that counts.
+  `com.apple.developer.applesignin` entitlement added; CI's automatic signing
+  picks up the capability already on the App ID (user step A1).
+- Pure parts (`NativeSignInRequest`, both platforms) carry the checks and the
+  error mapping, 100 % in CI as `applock`/`webauth`. Error codes hard-coded
+  there: Credential Manager's type strings, `ASAuthorizationError.canceled`
+  1001, `GIDSignInError.canceled` -5.
+- Functional (local, Android): the CI server has no Google client id, so the
+  plugin refuses with `invalid` and the page says "Sign-in did not finish";
+  that proves the armed Connections button, the nonce endpoint and the bridge.
+  A real sign-in needs a Google account: the Redmi (O3 user steps C2).

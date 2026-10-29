@@ -1,0 +1,22 @@
+{
+  "name": "asastats-nativesignin",
+  "version": "1.0.0",
+  "description": "ASA Stats app: the platforms' own Sign in with Apple and Google sheets (O3)",
+  "private": true,
+  "license": "UNLICENSED",
+  "files": [
+    "android/src/main/",
+    "android/build.gradle",
+    "ios/Sources",
+    "ios/Tests",
+    "Package.swift"
+  ],
+  "capacitor": {
+    "ios": {
+      "src": "ios"
+    },
+    "android": {
+      "src": "android"
+    }
+  }
+}

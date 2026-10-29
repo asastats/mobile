@@ -30,7 +30,17 @@
 				<string>com.asastats.app</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>google-sign-in</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.1054116980925-ev23pc8lk1vpsnvfa2ohfd4u9467skcr</string>
+			</array>
+		</dict>
 	</array>
+	<key>GIDClientID</key>
+	<string>1054116980925-ev23pc8lk1vpsnvfa2ohfd4u9467skcr.apps.googleusercontent.com</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>ITSAppUsesNonExemptEncryption</key>

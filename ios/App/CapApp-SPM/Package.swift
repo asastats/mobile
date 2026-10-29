@@ -22,6 +22,7 @@ let package = Package(
         .package(name: "CapacitorSplashScreen", path: "../../../node_modules/@capacitor/splash-screen"),
         .package(name: "CapacitorStatusBar", path: "../../../node_modules/@capacitor/status-bar"),
         .package(name: "AsastatsApplock", path: "../../../plugins/applock"),
+        .package(name: "AsastatsNativesignin", path: "../../../plugins/nativesignin"),
         .package(name: "AsastatsWebauth", path: "../../../plugins/webauth")
     ],
     targets: [
@@ -40,6 +41,7 @@ let package = Package(
                 .product(name: "CapacitorSplashScreen", package: "CapacitorSplashScreen"),
                 .product(name: "CapacitorStatusBar", package: "CapacitorStatusBar"),
                 .product(name: "AsastatsApplock", package: "AsastatsApplock"),
+                .product(name: "AsastatsNativesignin", package: "AsastatsNativesignin"),
                 .product(name: "AsastatsWebauth", package: "AsastatsWebauth")
             ]
         )

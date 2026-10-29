@@ -35,15 +35,28 @@ def test_delete_account_is_reachable_with_its_captcha(driver):
     )
 
 
-def test_connections_ask_for_google_on_the_website(driver):
+def test_connections_offer_google_through_the_native_sheet(driver):
+    # The emulator (google_apis) has Play services, so app.js arms the Google
+    # button and hides the website note (O3). This server has no Google client
+    # id, so the plugin refuses ("invalid"): nonce, bridge, plugin and back.
     sign_in(driver)
     driver.get(f"{SITE}/accounts/3rdparty/")
     site_loaded(driver)
 
+    wait(driver, lambda d: d.execute_script(
+        "var b = document.getElementById('id_google_connect');"
+        "return b && !b.hidden && b.hasAttribute('data-app-connect-ready');"
+    ))
     assert driver.execute_script(
-        "return !!document.getElementById('id_google_connect_on_website');"
+        "return document.getElementById('id_google_connect_on_website').hidden;"
     )
-    assert "/accounts/google/login/" not in driver.page_source
+
+    driver.execute_script("document.getElementById('id_google_connect').click();")
+
+    native(driver)
+    message = wait(driver, lambda d: d.find_elements("id", "android:id/message"))
+    assert message[0].text.startswith("Sign-in did not finish")
+    driver.find_element("id", "android:id/button1").click()
 
 
 def test_social_sign_in_without_https_says_it_did_not_finish(driver):
