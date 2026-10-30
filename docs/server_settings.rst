@@ -95,18 +95,18 @@ Android fingerprints
 
     ANDROID_CERT_SHA256=<app signing SHA-256>,<upload key SHA-256>
 
-Copy both values from Play Console, Test and release, App integrity, App signing, in the
-colon form (``AB:CD:...``). Case does not matter. These are public values: anyone can
-read them from ``assetlinks.json``.
+Copy both values from Play Console, :menuselection:`Test and release --> App integrity -->
+App signing`, in the colon form (``AB:CD:...``). Case does not matter. These are public
+values: anyone can read them from ``assetlinks.json``.
 
 Until the setting is filled in, links to www.asastats.com open in the browser instead of
 the app. Social sign-in on Android answers "unsupported". Nothing else breaks.
 
 An Internal app sharing install is re-signed by Google with an internal test certificate.
 Add that certificate's SHA-256 to the list too, or App Links and social sign-in fail on
-that install and only on that install. You find it in Play Console under Internal app
-sharing, Uploaders and testers. A debug build can never pass these checks, because its
-package name is in no asset links document.
+that install and only on that install. You find it in Play Console under
+:menuselection:`Internal app sharing --> Uploaders and testers`. A debug build can never
+pass these checks, because its package name is in no asset links document.
 
 After a deploy, check the result:
 

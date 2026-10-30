@@ -19,8 +19,8 @@ To start again:
    ``GoogleService-Info.plist`` and skip the rest of each wizard. The Capacitor plugin
    does those steps.
 #. Add the debug app too (next section).
-#. Check under Project settings, Cloud Messaging, that Firebase Cloud Messaging API (V1)
-   shows Enabled.
+#. Check under :menuselection:`Project settings --> Cloud Messaging` that Firebase Cloud
+   Messaging API (V1) shows Enabled.
 
 Adding a package name
 ~~~~~~~~~~~~~~~~~~~~~
@@ -58,11 +58,11 @@ Service account for the website
 
 The website needs credentials to call the FCM API:
 
-#. In the Google Cloud console, select the same project, then IAM and Admin, Service
-   Accounts, and create ``fcm-sender``.
+#. In the Google Cloud console, select the same project, then :menuselection:`IAM and
+   Admin --> Service Accounts` and create ``fcm-sender``.
 #. Give it the role Firebase Cloud Messaging API Admin.
-#. Open it, Keys, Add key, JSON. The file goes onto the web server and never into a
-   repository. :doc:`server_settings` shows where it goes.
+#. Open it, then :menuselection:`Keys --> Add key --> JSON`. The file goes onto the web
+   server and never into a repository. :doc:`server_settings` shows where it goes.
 
 The Firebase console's "Generate new private key" shortcut also works, but that account
 has far broader rights.
@@ -76,8 +76,9 @@ APNs key
 #. On the configure screen choose environment Sandbox and Production and key restriction
    Team Scoped (All Topics). You cannot change either after saving.
 #. Download the ``.p8`` and note the Key ID. Apple shows the file once.
-#. Firebase, Project settings, Cloud Messaging, the iOS app, APNs Authentication Key,
-   Upload. Enter the Key ID, the Team ID ``DF2V3954Z7`` and the file.
+#. In Firebase, open :menuselection:`Project settings --> Cloud Messaging`, select the iOS
+   app and, under APNs Authentication Key, choose Upload. Enter the Key ID, the Team ID
+   ``DF2V3954Z7`` and the file.
 
 One key serves development and production pushes. Keep the ``.p8`` out of the web server.
 That server holds only the Sign in with Apple key, and a separate APNs key means a leak
@@ -110,16 +111,17 @@ The return URL must match exactly, trailing slash included.
 Services ID
 ~~~~~~~~~~~
 
-Identifiers, plus, Services IDs. Register ``com.asastats.web``. Open it, tick Sign in
-with Apple, Configure, then enter the primary App ID, the domain and the return URL.
+Under Identifiers, press the plus button and choose Services IDs. Register
+``com.asastats.web``. Open it, tick Sign in with Apple, Configure, then enter the primary
+App ID, the domain and the return URL.
 
 Key
 ~~~
 
-Keys, plus, named ``ASA Stats Sign in with Apple``. Tick Sign in with Apple, Configure,
-choose ``com.asastats.app``. Download the ``.p8``. The ten characters in its file name are
-the Key ID, which becomes ``APPLE_KEY_ID``. This file goes onto the web server with
-``chmod 600`` and the web application's user as owner.
+Under Keys, press the plus button and name it ``ASA Stats Sign in with Apple``. Tick Sign
+in with Apple, Configure, choose ``com.asastats.app``. Download the ``.p8``. The ten
+characters in its file name are the Key ID, which becomes ``APPLE_KEY_ID``. This file goes
+onto the web server with ``chmod 600`` and the web application's user as owner.
 
 Email relay
 ~~~~~~~~~~~

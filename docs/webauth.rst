@@ -1,8 +1,9 @@
 WebAuth plugin
 ==============
 
-Google refuses sign-in inside a WebView. The local plugin in ``plugins/webauth/`` opens the system browser
-sheet for a social sign-in and hands a one-time ticket back to the page. Apple on iOS and
+Google refuses sign-in inside a WebView. The local plugin in ``plugins/webauth/``
+opens the system browser sheet for a social sign-in and hands a one-time ticket back
+to the page. Apple on iOS and
 Google use their native sheets instead where the phone has one (:doc:`nativesignin`);
 WebAuth handles the other providers and is the fallback for those two. It ships as a
 local npm package (``asastats-webauth``) with a Java implementation for Android and a

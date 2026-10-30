@@ -61,8 +61,8 @@ Jest and pytest
     python -m pytest
 
 ``pytest.ini`` makes the Python run fail under 100 % coverage of ``scripts/``.
-``jest.config.cjs`` sets a 100 % threshold for statements, branches, functions and lines. ``tests.yml`` runs both on every
-push and pull request.
+``jest.config.cjs`` sets a 100 % threshold for statements, branches, functions and
+lines. ``tests.yml`` runs both on every push and pull request.
 
 Native code that only calls the operating system, such as the sign-in sheet, sits behind
 a thin adapter. The tests use a fake. Coverage counts our files and ignores the files
@@ -112,8 +112,9 @@ The tests are in ``functional_tests/`` and carry three markers:
      - The platform-neutral live tests. Costs more runner minutes.
 
 A machine without KVM cannot run the emulator, so these suites run in CI only. When one
-fails, ``functional_tests/failures/`` and the ``appium-log`` or ``logs-local`` artifact of the failed run hold a screenshot, the
-available contexts, the page source and logcat from the moment of failure.
+fails, ``functional_tests/failures/`` and the ``appium-log`` or ``logs-local`` artifact
+of the failed run hold a screenshot, the available contexts, the page source and
+logcat from the moment of failure.
 
 A failure from Play services being killed after boot is an emulator flake. If it
 repeats, warm the emulator up in ``run-android.sh``.

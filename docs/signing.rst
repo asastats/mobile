@@ -43,8 +43,8 @@ Set the four secrets from the repository folder:
     gh secret set ANDROID_KEY_PASSWORD
 
 Before you set them, check that the keystore is the right one. Its SHA-256 must equal the
-upload key fingerprint shown in Play Console under Test and release, App integrity, App
-signing:
+upload key fingerprint shown in Play Console under :menuselection:`Test and release -->
+App integrity --> App signing`:
 
 .. code-block:: bash
 
@@ -137,9 +137,9 @@ Create or renew
 App Store Connect API key
 -------------------------
 
-Create it under Users and Access, Integrations, App Store Connect API, Team Keys, with
-the Admin role. Cloud-managed signing then needs no ``.p12`` for distribution. Apple
-shows the ``.p8`` once, so store it safely when you download it.
+Create it under :menuselection:`Users and Access --> Integrations --> App Store Connect
+API --> Team Keys`, with the Admin role. Cloud-managed signing then needs no ``.p12`` for
+distribution. Apple shows the ``.p8`` once, so store it safely when you download it.
 
 .. code-block:: bash
 

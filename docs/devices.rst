@@ -46,19 +46,24 @@ Inspecting the WebView
 ----------------------
 
 The tools below speak the Chrome DevTools protocol to the debug app. They live in the
-maintainer's workspace, outside this repository, and the list says what each does.
-They need a Python with ``websocket-client``, which Appium's client
-installs.
+maintainer's workspace under ``capacitor/adb-tools/``, outside this repository. They need
+a Python with ``websocket-client``, which Appium's client installs.
 
-* Evaluate JavaScript in the app's page and print the result.
-* Log WebSockets, console messages, exceptions, navigations and live-refresh polls with
-  timestamps, and inject a probe that records socket messages as the page sees them,
-  wallet store writes with stack traces, visibility changes and card redraws.
-* Take a heap snapshot and call a function on a live object. Minified class names change
-  with each bundle build, so look the name up again after every rebuild.
-* Serve a local ``bundle.js`` to the WebView instead of the site's, to try a frontend fix
-  before deploying it.
-* Print the SHA-256 of an APK's v2 or v3 signer, which ``keytool`` cannot read.
+* ``cdp.py '<js>'``: evaluate JavaScript in the app's page and print the result.
+* ``cdpwatch.py``: log WebSockets, console messages, exceptions, navigations and
+  live-refresh polls with timestamps. It injects ``s3probe.js``, which records socket
+  messages as the page sees them, wallet store writes with stack traces, visibility
+  changes and card redraws.
+* ``live.py '<function>'``: take a heap snapshot and call a function on a live object.
+  Minified class names change with each bundle build, so look the name up again after
+  every rebuild.
+* ``swapbundle.py <bundle.js>``: serve a local ``bundle.js`` to the WebView instead of the
+  site's, to try a frontend fix before deploying it.
+* ``trace.py <url> <out.json>`` and ``tracestats.py <out.json>``: trace a page load with
+  the cache off and print load times, main-thread busy time and long tasks. Start from a
+  fresh app process.
+* ``apkcert.py <apk>``: print the SHA-256 of an APK's v2 or v3 signer, which ``keytool``
+  cannot read.
 
 Cautions
 --------

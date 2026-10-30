@@ -88,8 +88,8 @@ Google Play: Data safety
 
 Collected: yes. Encrypted in transit: yes. Shared: none. Firebase Cloud Messaging, the
 Apple push service and the sign-in providers act as service providers, which Play does not
-count as sharing. Deletion on request: yes, in the app (Profile, Account, Delete account)
-and at the account deletion URL.
+count as sharing. Deletion on request: yes, in the app (:menuselection:`Profile -->
+Account --> Delete account`) and at the account deletion URL.
 
 .. list-table::
    :header-rows: 1
@@ -168,11 +168,10 @@ Text limits
      - Can change without a review.
    * - Short description, Play
      - 80
-     - Draft it as one line about tracking Algorand portfolios.
+     - ``Track Algorand portfolios: ASAs, NFTs and DeFi positions, priced every block.``
    * - Description, both
      - 4000
-     - The current text has the sections Track, Understand, Stay informed and Your
-       account, your keys.
+     - The current text is under *Current description* below.
    * - What's new / release notes
      - 4000 / 500
      - Play calls it release notes.
@@ -181,13 +180,44 @@ Text limits
      - Comma-separated, no spaces. Words already in the name and subtitle count, so do not
        repeat them.
 
-The current description covers live refresh with every block, bundles and alerts as
-notifications. It also states that the app never asks for, sees
-or stores a private key or recovery phrase, that there are no ads or tracking, and that it
-is not a wallet or an exchange and gives no financial advice.
-
 Categories: Finance on both stores, no secondary App Store category. Support and
 marketing URL: https://www.asastats.com/.
+
+
+Current description
+~~~~~~~~~~~~~~~~~~~
+
+The text below is the one for both stores. Its working copy, with the other store fields,
+is ``capacitor/STORE-LISTING.md`` in the maintainer's workspace; change both together. The
+bracketed phrase stays only while wallet sign-in works on the build under review (see the
+rules at the top).
+
+.. code-block:: text
+
+    ASA Stats shows what any Algorand address holds and what it is worth right now. Enter an address or an .algo name to see every ASA, NFT, liquidity pool share and staked or lent position in one place, valued in ALGO, USD or EUR.
+
+    ASA Stats reads the Algorand chain directly and prices assets from the network's decentralised exchanges, so values follow the market, not a delayed feed.
+
+    TRACK
+    • Any address, no account needed: holdings, NFT collections with floor and estimated values, and DeFi positions across Algorand protocols.
+    • Live refresh: the figures on an address page are re-priced with every Algorand block, about every three seconds, without reloading the page.
+    • Bundles: combine several addresses or .algo names into one portfolio and give it a name.
+
+    UNDERSTAND
+    • History: how a portfolio's value changed over time.
+    • Profit and loss: what you gained or lost, per asset and per period.
+    • Export your transactions as CSV and share the file straight from your phone.
+
+    STAY INFORMED
+    • Alerts: set a rule on a portfolio total or an asset price, and get a notification when it is crossed.
+    • Links to asastats.com pages open in the app.
+
+    YOUR ACCOUNT, YOUR KEYS
+    • Sign in with email, Apple, Google, GitHub, Discord, Reddit or X[, or with your Pera or Defly wallet].
+    • ASA Stats never asks for, sees or stores your private keys or recovery phrase. Anything that needs a signature is signed in your own wallet app.
+    • No ads, no tracking, no analytics. Delete your account at any time from your profile.
+
+    ASA Stats is the same service as www.asastats.com: sign in with the same account and everything is there. It is not a wallet or an exchange, and nothing in it is financial advice.
 
 
 Screenshot sizes

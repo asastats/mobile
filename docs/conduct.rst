@@ -95,5 +95,5 @@ App Review checks these points.
 Physical devices
 ----------------
 
-Never toggle Wi-Fi, mobile data or airplane mode on a test phone over adb. If the phone
-shares its connection with your workstation, you cut yourself off. See :doc:`devices`.
+Never toggle Wi-Fi, mobile data or airplane mode on a test phone over adb; the reason is
+in :doc:`devices`.

@@ -13,10 +13,12 @@ Workflows
    * - ``android.yml``
      - Always a debug APK (``com.asastats.app.debug``, "ASA Stats dev"), artifact
        ``asastats-debug-apk``. With the keystore secrets, also a signed ``.aab``,
-       artifact ``asastats-release-aab``. The plugin tests (WebAuth, AppLock, NativeSignIn) run first.
+       artifact ``asastats-release-aab``. The plugin tests (WebAuth, AppLock,
+       NativeSignIn) run first.
    * - ``ios.yml``
      - Without the App Store Connect secrets, a simulator compile. With them, an archive
-       that is signed and uploaded to TestFlight. The plugin tests (WebAuth, AppLock, NativeSignIn) run first.
+       that is signed and uploaded to TestFlight. The plugin tests (WebAuth, AppLock,
+       NativeSignIn) run first.
    * - ``tests.yml``
      - Jest and pytest.
    * - ``functional.yml``, ``functional-ios.yml``
@@ -48,8 +50,9 @@ testers. A first release can take up to an hour.
 
 #. Make sure the four ``ANDROID_KEY*`` secrets exist, then download the signed ``.aab``
    from the Android workflow run.
-#. Play Console, the app, Test and release, Testing, Internal testing, Testers tab.
-   Create an email list with the testers' Google accounts, and tick the list.
+#. In Play Console open the app, then :menuselection:`Test and release --> Testing -->
+   Internal testing`, and the Testers tab. Create an email list with the testers' Google
+   accounts, and tick the list.
 #. Create a new release, upload the ``.aab``, name it after the version and build
    number, add release notes, and choose Save and publish. Play may first ask you to
    finish the App content declarations (:doc:`store_listing`).
@@ -72,8 +75,8 @@ Check in this order:
    the browser accepted the invite with.
 #. Open the opt-in link again signed in with that account. It must say you are a tester
    and not offer "Become a tester".
-#. Settings, Apps, Google Play Store, Storage, Clear cache. Play can take up to an hour
-   for a first internal release.
+#. :menuselection:`Settings --> Apps --> Google Play Store --> Storage --> Clear cache`.
+   Play can take up to an hour for a first internal release.
 #. App bundle explorer, device catalog: the phone model must be supported. If it is not,
    Play serves the newest build the phone can install.
 
