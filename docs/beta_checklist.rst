@@ -10,6 +10,9 @@ Copy the tables into a sheet for each round. Fill a cell with ``ok`` or with wha
 not ``ok`` goes into a problems list with the device. How to get the builds onto phones is
 in :doc:`releasing`.
 
+A ✓ in column A is a result recorded on the Redmi in an earlier round, not a pass for the
+round you are running: clear the marks before you start.
+
 Devices
 -------
 
@@ -111,6 +114,12 @@ Open each, scroll to the bottom, tap one link. Check nothing overlaps, nothing i
      -
      -
      -
+   * - A very large address (``MVEKYHFLJ63UKDYGNKCJD7WO5KFJZFVFMJPSDAWLDIDP4LUP575YDOW6GI``, about 3,600 assets): opens, scrolls, sorting and pinning respond
+     -
+     -
+     -
+     -
+     -
    * - A ``.algo`` name
      -
      -
@@ -200,7 +209,7 @@ No buying in the app (App Review rejects this)
    * - No ASASTATS price or "subscribe" text on any page above
      -
      -
-     - accepted
+     -
      -
      -
 
@@ -237,7 +246,7 @@ With the demo account. For each: opens, shows data, its main action works.
      -
      -
      -
-   * - Alerts: see section 6
+   * - Alerts: see *Alerts and notifications* below
      -
      -
      -
@@ -407,7 +416,7 @@ Sign-in, sign-out, account
      -
      -
      -
-   * - Sign out: signed out, and section 6 "sign-out" row passes
+   * - Sign out: signed out, and the "Sign out, run the test again" row under *Alerts and notifications* passes
      -
      -
      -
@@ -723,12 +732,6 @@ Themes and appearance
      -
      -
    * - Change the theme in the profile (a light and a dark one): status bar follows
-     -
-     -
-     -
-     -
-     -
-   * - A very large address (``MVEKYHFLJ63UKDYGNKCJD7WO5KFJZFVFMJPSDAWLDIDP4LUP575YDOW6GI``, about 3,600 assets): opens, scrolls, sorting and pinning respond
      -
      -
      -

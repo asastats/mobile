@@ -26,8 +26,8 @@ Add a page
 ----------
 
 Write ``reStructuredText`` in ``docs/`` and add the file to a ``toctree`` in
-``index.rst``. An unlisted page is not an error, only a missing page, so check the
-sidebar after you build.
+``index.rst``. Sphinx warns about a page that is in no ``toctree``, and ``-W`` turns
+that warning into a failed build.
 
 Add a module to the API pages
 -----------------------------

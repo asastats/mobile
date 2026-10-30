@@ -1434,3 +1434,16 @@ relaunch 3 times of 3; with Home first (`onPause`), then a force-stop 2 s
 later, it was kept 3 of 3 (workspace `capacitor/BETA-ADB-RESULTS.md`). The
 lazy write is real and the flush covers an app killed in the background.
 Whether the two sign-outs were this is still for the server trace to show.
+
+### LICENSE, package.json `license`: MIT (2026-10-30)
+
+The repository is public on GitHub as `asastats/mobile`. It takes the
+frontend's licence, copied unchanged (MIT, ASA Stats DAO); `package.json` and
+the root entry of `package-lock.json` said `UNLICENSED` until this date.
+
+## docs/testing.rst: the Play-services emulator flake (2026-10-30, incident date not recorded)
+
+One functional-test failure was caused by Play services being killed after the
+emulator booted. It did not repeat, so it was treated as a flake and nothing was
+changed. The doc keeps the rule: if it repeats, warm the emulator up in
+`functional_tests/run-android.sh`.

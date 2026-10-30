@@ -29,8 +29,9 @@ Every upload needs a build number the store has not seen. CI derives it from
 ``package.json`` (:doc:`development`), so a fresh commit is enough. To change the store
 version, edit ``version`` in ``package.json`` and nothing else.
 
-Keep the actions current. GitHub forces Node 20 actions onto Node 24, so move to each action's newest major when a deprecation notice appears, and read
-the first green run before relying on the change.
+Keep the actions current. GitHub forces Node 20 actions onto Node 24, so move to each
+action's newest major when a deprecation notice appears, and read the first green run
+before relying on the change.
 
 
 Getting a store build onto a phone
@@ -42,7 +43,8 @@ is in no App Links fingerprint list. Store builds are what users and reviewers g
 Play internal testing
 ~~~~~~~~~~~~~~~~~~~~~
 
-Internal testing needs no review and goes live within minutes, with up to 100 testers.
+Internal testing needs no review and usually goes live within minutes, with up to 100
+testers. A first release can take up to an hour.
 
 #. Make sure the four ``ANDROID_KEY*`` secrets exist, then download the signed ``.aab``
    from the Android workflow run.

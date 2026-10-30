@@ -115,8 +115,8 @@ A machine without KVM cannot run the emulator, so these suites run in CI only. W
 fails, ``functional_tests/failures/`` and the ``appium-log`` or ``logs-local`` artifact of the failed run hold a screenshot, the
 available contexts, the page source and logcat from the moment of failure.
 
-One failure caused by Play services being killed after boot was an emulator flake. Act
-when it repeats, and then warm the emulator up in ``run-android.sh``.
+A failure from Play services being killed after boot is an emulator flake. If it
+repeats, warm the emulator up in ``run-android.sh``.
 
 Appium on iOS
 ~~~~~~~~~~~~~

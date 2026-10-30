@@ -11,7 +11,7 @@
     "test": "jest --config jest.config.cjs --coverage"
   },
   "author": "Ivica Paleka",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "type": "commonjs",
   "dependencies": {
     "@capacitor-firebase/messaging": "8.5.2",

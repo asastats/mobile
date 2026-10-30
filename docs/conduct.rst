@@ -55,8 +55,9 @@ Secrets
   without a value on the command line, so the value stays out of shell history.
 * Keep the originals in a store outside the repository that you back up. A lost Android
   upload key costs days (see :doc:`signing`).
-* Docs and issues name placeholders such as ``<KEY_ID>``, never real key ids, file names
-  of credentials or server accounts.
+* Docs and issues name placeholders such as ``<KEY_ID>``, never real key ids or file
+  names of credentials. Identifiers that are public anyway (bundle ids, the Team ID, the
+  Firebase project ID) and the names of accounts these docs tell you to create may appear.
 
 
 Commits and review
