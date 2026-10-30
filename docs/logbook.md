@@ -1447,3 +1447,23 @@ One functional-test failure was caused by Play services being killed after the
 emulator booted. It did not repeat, so it was treated as a flake and nothing was
 changed. The doc keeps the rule: if it repeats, warm the emulator up in
 `functional_tests/run-android.sh`.
+
+## functional_tests/test_local.py, conftest.py: the push pair resends (2026-10-30)
+
+`test_a_push_reaches_the_notification_shade` and
+`test_a_push_while_the_app_is_open_is_shown_and_its_tap_opens_the_page` failed
+on a first run and passed on a re-run, on 2026-10-29 (13:20) and again on
+2026-10-30 (`local` job, 17:55-18:03 UTC). Both times the server's `notify()`
+reported `sent 1` and the device registered, but the emulator logged no
+`AlertMessaging` receipt and no c2dm event after the boot-time alarms. The job
+had also logged `Failed to load snapshot 'default_boot'`: a cold boot, with
+the push tests running last, about four minutes in.
+
+Believed (not shown, the evidence lacked connection state): the emulator's
+FCM connection through Play services was not up when the single send happened.
+`delivered()` now resends up to three times, 60 s each, before failing.
+`save_push_evidence` also saves `dumpsys activity service ...GcmService` as
+`push.txt`'s "dumpsys gcm" section, so the next failure shows the connection
+state (the command is untested; an empty section means it needs another one).
+If it still fails after three sends, warm the emulator up in `run-android.sh`
+(see the Play-services entry above).

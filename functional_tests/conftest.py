@@ -89,9 +89,10 @@ def save_push_evidence(driver, folder, notes):
     try:
         logcat = driver.execute_script("mobile: shell", {"command": "logcat", "args": ["-d", "-v", "time"]})
         dump = driver.execute_script("mobile: shell", {"command": "dumpsys", "args": ["notification", "--noredact"]})
+        gcm = driver.execute_script("mobile: shell", {"command": "dumpsys", "args": ["activity", "service", "com.google.android.gms/.gcm.GcmService"]})
         lines = [line for line in logcat.splitlines() if any(key in line for key in PUSH_LOG)]
         posted = [line for line in dump.splitlines() if "asastats" in line]
-        (folder / "push.txt").write_text("\n".join(lines + ["--- dumpsys notification"] + posted) + "\n")
+        (folder / "push.txt").write_text("\n".join(lines + ["--- dumpsys gcm"] + gcm.splitlines()[:60] + ["--- dumpsys notification"] + posted) + "\n")
     except Exception as error:  # noqa: BLE001
         notes.append(f"push evidence: {error!r}")
 

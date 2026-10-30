@@ -7,6 +7,7 @@ import time
 from pathlib import Path
 
 import pytest
+from selenium.common.exceptions import TimeoutException
 
 from conftest import PACKAGE, SITE, TIMEOUT, USER, devices, native, sign_in, site_loaded, wait, webview
 
@@ -169,10 +170,19 @@ def send_alert(title):
     assert "sent " in sent.stdout and "sent 0" not in sent.stdout, sent.stdout + sent.stderr
 
 
-def in_the_shade(driver, title):
-    """Open the notification shade and return the notification titled `title`."""
-    driver.open_notifications()
-    return wait(driver, lambda d: d.find_elements("xpath", f'//*[@text="{title}"]'))[0]
+def delivered(driver, title, attempts=3):
+    """Send `title` and return its notification from the shade, resending if it never shows.
+
+    A freshly booted emulator may not have its FCM connection up yet (logbook).
+    """
+    for attempt in range(attempts):
+        send_alert(title)
+        driver.open_notifications()
+        try:
+            return wait(driver, lambda d: d.find_elements("xpath", f'//*[@text="{title}"]'))[0]
+        except TimeoutException:
+            if attempt == attempts - 1:
+                raise
 
 
 @needs_fcm
@@ -183,9 +193,7 @@ def test_a_push_reaches_the_notification_shade(driver):
     driver.press_keycode(3)  # HOME
 
     title = f"Functional test {os.getpid()} background"
-    send_alert(title)
-
-    in_the_shade(driver, title)
+    delivered(driver, title)
 
 
 @needs_fcm
@@ -195,9 +203,7 @@ def test_a_push_while_the_app_is_open_is_shown_and_its_tap_opens_the_page(driver
     native(driver)
 
     title = f"Functional test {os.getpid()} foreground"
-    send_alert(title)
-
-    in_the_shade(driver, title).click()
+    delivered(driver, title).click()
     webview(driver)
     # SEND's url is "/": the tap reaches app.js as notificationActionPerformed.
     wait(driver, lambda d: d.current_url == f"{SITE}/")
