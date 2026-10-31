@@ -60,11 +60,15 @@ jobs:
         working-directory: android
         run: ./gradlew --no-daemon :asastats-nativesignin:jacocoCoverageCheck :asastats-nativesignin:jacocoCoverageReport
 
+      - name: FlutterData plugin tests, 100 % coverage of its logic
+        working-directory: android
+        run: ./gradlew --no-daemon :asastats-flutterdata:jacocoCoverageCheck :asastats-flutterdata:jacocoCoverageReport
+
       - name: Upload plugins Java coverage to Codecov
         uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: plugins/webauth/android/build/reports/jacoco/jacocoCoverageReport/jacocoCoverageReport.xml,plugins/applock/android/build/reports/jacoco/jacocoCoverageReport/jacocoCoverageReport.xml,plugins/nativesignin/android/build/reports/jacoco/jacocoCoverageReport/jacocoCoverageReport.xml
+          files: plugins/webauth/android/build/reports/jacoco/jacocoCoverageReport/jacocoCoverageReport.xml,plugins/applock/android/build/reports/jacoco/jacocoCoverageReport/jacocoCoverageReport.xml,plugins/nativesignin/android/build/reports/jacoco/jacocoCoverageReport/jacocoCoverageReport.xml,plugins/flutterdata/android/build/reports/jacoco/jacocoCoverageReport/jacocoCoverageReport.xml
           disable_search: true
           plugins: noop
           flags: plugins-java

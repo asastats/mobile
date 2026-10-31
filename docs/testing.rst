@@ -43,6 +43,12 @@ with Selenium using the app's user-agent token. This repository tests the shell.
    * - NativeSignIn plugin, iOS
      - XCTest and ``xccov``
      - ``xcodebuild test -scheme AsastatsNativesignin`` in ``plugins/nativesignin``
+   * - FlutterData plugin, Android
+     - JUnit and JaCoCo
+     - ``./gradlew :asastats-flutterdata:jacocoCoverageCheck`` in ``android/``
+   * - FlutterData plugin, iOS
+     - XCTest and ``xccov``
+     - ``xcodebuild test -scheme AsastatsFlutterdata`` in ``plugins/flutterdata``
    * - The installed app
      - Appium
      - see below

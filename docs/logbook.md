@@ -1467,3 +1467,43 @@ FCM connection through Play services was not up when the single send happened.
 state (the command is untested; an empty section means it needs another one).
 If it still fails after three sends, warm the emulator up in `run-android.sh`
 (see the Play-services entry above).
+
+## plugins/flutterdata: the old Flutter app's saved addresses (2026-10-31)
+
+One call, `FlutterData.readAddresses()` → `{addresses: string[]}`. It returns
+what the Flutter app (`mobileapp/`, same application id `com.asastats.app`)
+saved under `address`, newest first. The site's `app.js`
+(`frontend/wallet/src/app/flutterAddresses.ts`) uses it once to seed the
+index page's list of checked addresses. The user turned down this carry-over
+(A7) on 2026-10-27 and asked for it on 2026-10-31. The frontend logbook has the
+page side.
+
+**Android.** shared_preferences keeps everything in the `FlutterSharedPreferences`
+file, keys prefixed `flutter.`. A string list is one string with a prefix:
+`VGhpcyBpcyB0aGUgcHJlZml4IGZvciBhIGxpc3Qu!` + JSON from
+shared_preferences_android 2.3.0 (`mobileapp/pubspec.lock` has 2.4.12), or the
+same prefix without `!` + Base64 of a Java-serialized `ArrayList` before that.
+Which plugin version the published store build used is not recorded, so both
+are read. `FlutterList` holds that logic and is checked at 100 % lines and
+branches by JaCoCo, like the other plugins' pure classes.
+
+- The legacy form is read through an `ObjectInputStream` that resolves only
+  `java.util.ArrayList`. Strings need no class lookup, and anything else is
+  refused before it is built, so the stored bytes cannot create other objects.
+- The JSON form uses a small parser of string arrays instead of `org.json`.
+  `org.json` is a stub in JVM unit tests and would need another test
+  dependency. Anything that is not an array of strings decodes as empty.
+- Base64 is passed in (`android.util.Base64` in the app, `java.util.Base64` in
+  tests): `java.util.Base64` needs API 26 and minSdk is 24.
+- Run locally on 2026-10-31 with plain `javac`, JUnit 4.13.2 and the JaCoCo
+  0.8.12 agent (no Android SDK on the Pi): 14 tests, 100 % lines and branches.
+  `FlutterDataPlugin` itself was only built by CI.
+
+**iOS.** shared_preferences_foundation keeps a string list as an array in
+standard `UserDefaults` under `flutter.address`. `@capacitor/preferences` can't
+read it (its `get` is `string(forKey:)`), hence the plugin. `FlutterAddresses`
+holds that logic and is held at 100 % by `xccov` in CI. It was not built here
+(no Swift toolchain).
+
+Nothing is deleted from the Flutter preferences: the page's flag
+(`asastats.flutterSeeded` in localStorage) stops a second seeding.

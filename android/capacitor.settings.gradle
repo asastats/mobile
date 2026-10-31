@@ -32,6 +32,9 @@ project(':capacitor-status-bar').projectDir = new File('../node_modules/@capacit
 include ':asastats-applock'
 project(':asastats-applock').projectDir = new File('../plugins/applock/android')
 
+include ':asastats-flutterdata'
+project(':asastats-flutterdata').projectDir = new File('../plugins/flutterdata/android')
+
 include ':asastats-nativesignin'
 project(':asastats-nativesignin').projectDir = new File('../plugins/nativesignin/android')
 

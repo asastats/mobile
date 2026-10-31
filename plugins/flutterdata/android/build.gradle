@@ -1,0 +1,84 @@
+ext {
+    junitVersion = project.hasProperty('junitVersion') ? rootProject.ext.junitVersion : '4.13.2'
+}
+
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.13.0'
+    }
+}
+
+apply plugin: 'com.android.library'
+apply plugin: 'jacoco'
+
+android {
+    namespace = "com.asastats.flutterdata"
+    compileSdk = project.hasProperty('compileSdkVersion') ? rootProject.ext.compileSdkVersion : 36
+    defaultConfig {
+        minSdkVersion project.hasProperty('minSdkVersion') ? rootProject.ext.minSdkVersion : 24
+        targetSdkVersion project.hasProperty('targetSdkVersion') ? rootProject.ext.targetSdkVersion : 36
+        versionCode 1
+        versionName "1.0"
+    }
+    buildTypes {
+        debug {
+            enableUnitTestCoverage = true
+        }
+        release {
+            minifyEnabled false
+        }
+    }
+    lintOptions {
+        abortOnError = false
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+    }
+}
+
+repositories {
+    google()
+    mavenCentral()
+}
+
+dependencies {
+    implementation project(':capacitor-android')
+    testImplementation "junit:junit:$junitVersion"
+}
+
+// FlutterDataPlugin only adapts Capacitor and SharedPreferences; its logic is
+// FlutterList, checked here (docs/logbook.md).
+def coverageClasses = fileTree("$buildDir/intermediates/javac/debug") {
+    include '**/FlutterList*.class'
+}
+def coverageData = fileTree(buildDir) { include '**/testDebugUnitTest.exec' }
+
+tasks.register('jacocoCoverageCheck', JacocoCoverageVerification) {
+    dependsOn 'testDebugUnitTest'
+    executionData.from = coverageData
+    sourceDirectories.from = files('src/main/java')
+    classDirectories.from = coverageClasses
+    violationRules {
+        rule {
+            limit { counter = 'LINE'; minimum = 1.0 }
+            limit { counter = 'BRANCH'; minimum = 1.0 }
+        }
+    }
+}
+
+// The same classes as an XML report, for Codecov (.github/workflows/android.yml).
+tasks.register('jacocoCoverageReport', JacocoReport) {
+    dependsOn 'testDebugUnitTest'
+    executionData.from = coverageData
+    sourceDirectories.from = files('src/main/java')
+    classDirectories.from = coverageClasses
+    reports {
+        xml.required = true
+        html.required = false
+    }
+}
