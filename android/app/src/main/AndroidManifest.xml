@@ -63,6 +63,20 @@
                 <data android:pathAdvancedPattern="/[^/]+/" />
                 <!-- Addresses below API 31: any path of exactly 58 characters after the slash -->
                 <data android:pathPattern="/.........................................................." />
+                <!-- Below API 31 too: bundles (40), .algo names, the content pages. See docs/logbook.md -->
+                <data android:pathPattern="/........................................" />
+                <data android:pathPattern="/.*\\.algo" />
+                <data android:pathPattern="/.*\\..*\\.algo" />
+                <data android:pathPattern="/.*\\.algo/nfd" />
+                <data android:pathPattern="/.*\\.algo/ans" />
+                <data android:path="/about/" />
+                <data android:path="/account-deletion/" />
+                <data android:path="/asm-privacy/" />
+                <data android:path="/disclaimer/" />
+                <data android:path="/faq/" />
+                <data android:path="/features/" />
+                <data android:path="/methodology/" />
+                <data android:path="/tokenomics/" />
             </intent-filter>
 
             <!-- Sign-in return: com.asastats.app:/auth?ticket=... -->

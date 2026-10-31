@@ -122,3 +122,28 @@ describe("offline.js", () => {
     expect(window.location.href).toBe("https://www.asastats.com");
   });
 });
+
+describe("offline.js status bar", () => {
+  type Bridge = { Capacitor?: unknown };
+  afterEach(() => {
+    delete (window as Bridge).Capacitor;
+  });
+  const load = () => {
+    document.body.innerHTML = '<button id="retry">Retry</button>';
+    jest.isolateModules(() => require("../offline/offline.js"));
+  };
+
+  it("asks for light icons on the dark page", () => {
+    const setStyle = jest.fn();
+    (window as Bridge).Capacitor = {
+      Plugins: { StatusBar: { setStyle }, SystemBars: { setStyle } },
+    };
+    load();
+    expect(setStyle).toHaveBeenCalledTimes(2);
+    expect(setStyle).toHaveBeenCalledWith({ style: "DARK" });
+  });
+
+  it("does nothing without the bridge", () => {
+    expect(load).not.toThrow();
+  });
+});

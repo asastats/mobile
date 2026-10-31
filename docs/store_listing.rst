@@ -217,7 +217,7 @@ rules at the top).
     • ASA Stats never asks for, sees or stores your private keys or recovery phrase. Anything that needs a signature is signed in your own wallet app.
     • No ads, no tracking, no analytics. Delete your account at any time from your profile.
 
-    ASA Stats is the same service as www.asastats.com: sign in with the same account and everything is there. It is not a wallet or an exchange, and nothing in it is financial advice.
+    ASA Stats is the same service as www.asastats.com: sign in with the same account and everything is there. It is not a wallet: it never holds your keys or funds, and any swap is signed in your own wallet app. Nothing in it is financial advice.
 
 
 Screenshot sizes

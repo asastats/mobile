@@ -655,6 +655,12 @@ Links
      - ✓
      -
      -
+   * - Android 11 or older, from the build after 2026-10-31: a bundle link (40 characters), ``niko.algo``, ``/faq/`` and ``/methodology/`` open in the app; ``/accounts/login/`` and a named bundle still open the browser
+     -
+     -
+     -
+     -
+     -
    * - The same with the app closed
      -
      -

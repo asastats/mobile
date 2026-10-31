@@ -1507,3 +1507,46 @@ holds that logic and is held at 100 % by `xccov` in CI. It was not built here
 
 Nothing is deleted from the Flutter preferences: the page's flag
 (`asastats.flutterSeeded` in localStorage) stops a second seeding.
+
+## android/app/src/main/AndroidManifest.xml: more App Links below API 31 (2026-10-31)
+
+The 2026-10-31 check round found the listing's "Links to asastats.com pages open
+in the app" false on Android 11: only addresses, `/`, `/home/`, `/profile/`,
+`/widgets/` and `/export/` resolved. The user asked for both a manifest fix and
+a listing check.
+
+Added for every API level:
+
+- `pathPattern` `/` + 40 `.`: bundles. The earlier entry above did not add it
+  because "more site paths have that length". Re-measured from the URL resolver
+  on 2026-10-31: the fixed-length `/accounts/` paths are 16-40 characters, and
+  `/accounts/twitter_oauth2/login/callback/`, the longest, is 40, so none is 41.
+  `/app/auth/start/<provider>/` would need a 24-character provider name. As
+  with the 58 pattern, only an allauth email-confirmation or password-reset
+  link of exactly that length could match, which is harmless.
+- `/.*\\.algo`, `/.*\\..*\\.algo`, `/.*\\.algo/nfd`, `/.*\\.algo/ans`: the name
+  routes. `PatternMatcher`'s `.*` does not backtrack (it stops at the first
+  occurrence of the next character), hence the separate one-subdomain pattern.
+  API paths end in `/`, so `/api/v2/x.algo/` does not match.
+- `path` for `/about/`, `/account-deletion/`, `/asm-privacy/`, `/disclaimer/`,
+  `/faq/`, `/features/`, `/methodology/`, `/tokenomics/`. `/subscriptions/` is
+  left out: it is a 404 in the app now.
+
+Named bundles (`/<name>`, 1-50 characters of anything) still open the browser
+below API 31: no glob can tell them from `/accounts/...`.
+
+`tests/manifest.test.ts` ports `PatternMatcher.matchGlobPattern` and checks both
+directions (these open the app, sign-in paths never do). Not tried on a phone:
+it needs a new CI build, and Android 11 re-verifies App Links only on install.
+
+## offline/offline.js: status bar icons (C3, 2026-10-31)
+
+The offline page is dark purple, but its status bar kept the site's dark icons.
+The site's `statusBar.ts` is not loaded there, so `offline.js` calls
+`setStyle({style: "DARK"})` (light icons) on both `SystemBars` and `StatusBar`,
+each in a `try` for a missing bridge or plugin. On the Redmi (Android 11, MIUI)
+on 2026-10-31, `SystemBars.setStyle` DARK/LIGHT from the site's page cleared and
+restored the window's `LIGHT_STATUS_BAR` flag (`dumpsys window`). `StatusBar`'s
+call resolved, but its effect on the flag was not checked. The icons did not visibly
+change over the light site page, and the offline page itself could not be
+opened without cutting the phone's network, so the visible result is unchecked.
