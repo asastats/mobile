@@ -32,7 +32,7 @@ Workflows
    * - ``store.yml``
      - By hand only. Runs a lane of ``fastlane/Fastfile``: download the current listings,
        upload texts and screenshots, submit an iOS build for review, promote Play's
-       internal release to production and complete its rollout.
+       internal release to production and complete its rollout (:doc:`publishing`).
 
 All of them except the last two run on pushes to ``main``, and all of them by hand. The secrets are listed in
 :doc:`signing`, :doc:`firebase` and the repository README.
@@ -130,23 +130,8 @@ Before you promote a build
 Screenshots and listings
 ------------------------
 
-#. Run ``screenshots.yml`` with an address (and a bundle id, or leave it empty).
-   With ``REVIEW_DEMO_USER`` and ``REVIEW_DEMO_PASSWORD`` set it signs in first. The
-   scenes are in ``functional_tests/screenshots.json``; each run checks the pixel size each
-   store slot needs.
-#. Download the artifacts and choose the shots. iPhone and iPad go together into
-   ``fastlane/screenshots/en-US/``; Android ones into
-   ``fastlane/metadata/android/en-GB/images/`` under ``phoneScreenshots``,
-   ``sevenInchScreenshots`` and ``tenInchScreenshots``.
-#. Run ``store.yml`` with "ios listing" and "android listing".
-
-Play's listing language is en-GB, the App Store's en-US. "android listing" changes the
-live Play page at once (after Google's review), so it shows the new name, icon and texts
-on the current app. Run it on release day. "ios listing" only edits the version being
-prepared, which nobody sees until it is released.
-
-Before the first listing upload, run "download listings" and commit its artifact under
-``fastlane/``, so an upload never blanks a field that was missing locally.
+Taking the screenshots, uploading the listings and the store releases themselves are in
+:doc:`publishing`.
 
 What changes without a new build
 --------------------------------

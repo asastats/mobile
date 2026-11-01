@@ -5,12 +5,14 @@ Run only by .github/workflows/screenshots.yml (marker `screenshots`).
 
 import json
 import os
+import string
 import struct
 import time
 from pathlib import Path
 
 import pytest
 from appium import webdriver
+from appium.webdriver.common.appiumby import AppiumBy
 
 from conftest import PASSWORD, PLATFORM, SITE, android_options, ios_options, native, sign_in, site_loaded, wait
 
@@ -30,8 +32,20 @@ OUTPUT = Path(os.environ.get("ASASTATS_SCREENSHOTS_DIR", HERE / "screenshots")) 
 SIZES = [size for size in os.environ.get("ASASTATS_SCREENSHOT_SIZE", "").split("|") if size]
 #: PORTRAIT, or LANDSCAPE for Play's desktop slot.
 ORIENTATION = os.environ.get("ASASTATS_SCREENSHOT_ORIENTATION", "PORTRAIT")
-#: Seconds after `ready` for charts and htmx swaps to finish drawing.
+#: Seconds after `ready` for charts and htmx swaps to finish drawing; a scene's `settle` overrides it.
 SETTLE = 5
+#: Floating controls that cover content in a still picture.
+HIDDEN = "#scroll-to-top"
+#: Signed in as the demo account; conftest's USER has a local default, so test the variable.
+SIGNED_IN = bool(os.environ.get("APP_TEST_USER") and PASSWORD)
+#: True once every image of `arguments[0]` inside the viewport has loaded (lazy ones below it never do).
+IMAGES_DRAWN = """
+var box = document.querySelector(arguments[0]);
+return Array.from(box.querySelectorAll('img')).every(function (img) {
+  var r = img.getBoundingClientRect();
+  return img.complete || r.bottom < 0 || r.top > window.innerHeight || !r.width;
+});
+"""
 
 
 def png_size(path):
@@ -46,8 +60,7 @@ def session():
     native(driver)
     driver.orientation = ORIENTATION
     site_loaded(driver)
-    # Signed in only with the demo account's secrets; conftest's USER has a local default.
-    if os.environ.get("APP_TEST_USER") and PASSWORD:
+    if SIGNED_IN:
         sign_in(driver)
     yield driver
     driver.quit()
@@ -59,8 +72,10 @@ def test_scene(session, scene):
         path = scene["path"].format(**VALUES)
     except KeyError as error:
         pytest.fail(f"unknown placeholder {error} in {scene['name']}")
-    if path.rstrip("/") == "" and scene["path"] != "/":
+    if any(field and not VALUES.get(field) for _, field, _, _ in string.Formatter().parse(scene["path"])):
         pytest.skip("no value for this scene's placeholder")
+    if scene.get("signed_in") and not SIGNED_IN:
+        pytest.skip("needs the demo account (REVIEW_DEMO_USER, REVIEW_DEMO_PASSWORD)")
 
     driver = session
     site_loaded(driver)
@@ -71,13 +86,43 @@ def test_scene(session, scene):
     )
     driver.get(f"{SITE}{path}")
     site_loaded(driver)
-    wait(driver, lambda d: d.execute_script("return !!document.querySelector(arguments[0]);", scene["ready"]))
+    if PLATFORM == "android":
+        # Immersive: no taskbar on the tablets, no light bar over the dark theme (logbook).
+        driver.execute_script("try { window.Capacitor.nativePromise('SystemBars', 'hide', {}); } catch (e) {}")
+    ready = scene["ready"] if isinstance(scene["ready"], list) else [scene["ready"]]
+    for selector in ready:
+        wait(driver, lambda d: d.execute_script("return !!document.querySelector(arguments[0]);", selector))
+    if scene.get("ready_script"):
+        wait(driver, lambda d: d.execute_script(scene["ready_script"]))
     wait(driver, lambda d: d.execute_script("return !document.querySelector('.htmx-request');"))
-    if scene.get("scroll_to"):
+    if scene.get("open"):
+        # A <details> row; opening an NFT collection fetches its items (hx-trigger "toggle once").
+        opened = driver.execute_script(
+            "var row = document.querySelector(arguments[0]);"
+            "if (!row) return false;"
+            "row.open = true; row.scrollIntoView({block: 'start'}); return true;",
+            scene["open"],
+        )
+        assert opened, f"{scene['name']}: nothing matches {scene['open']}"
+        time.sleep(1)
+        wait(driver, lambda d: d.execute_script("return !document.querySelector('.htmx-request');"))
+        wait(driver, lambda d: d.execute_script(IMAGES_DRAWN, scene["open"]))
+    elif scene.get("scroll_to"):
         driver.execute_script("document.querySelector(arguments[0]).scrollIntoView({block: 'start'});", scene["scroll_to"])
-    time.sleep(SETTLE)
+    driver.execute_script(
+        "var style = document.createElement('style');"
+        "style.textContent = arguments[0] + ' { display: none !important; }';"
+        "document.head.appendChild(style);",
+        HIDDEN,
+    )
+    time.sleep(scene.get("settle", SETTLE))
 
     native(driver)
+    if PLATFORM == "android":
+        # Fallback for the immersive notice run-android.sh turns off.
+        for button in driver.find_elements(AppiumBy.XPATH, '//*[@text="Got it"]'):
+            button.click()
+            time.sleep(2)
     OUTPUT.mkdir(parents=True, exist_ok=True)
     target = OUTPUT / f"{scene['name']}.png"
     driver.get_screenshot_as_file(str(target))

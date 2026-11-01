@@ -1,6 +1,10 @@
 [
   {"name": "01-address", "path": "/{address}", "ready": "#id-band-classic"},
-  {"name": "02-charts", "path": "/{address}", "ready": "#id-cons-body", "scroll_to": "#id-cons-header"},
-  {"name": "03-bundle", "path": "/{bundle}", "ready": "#id-band-classic"},
-  {"name": "04-dark", "path": "/{address}", "ready": "#id-band-classic", "theme": "asastats-dark"}
+  {"name": "02-asset", "path": "/{address}", "ready": "#id-band-classic", "open": ".asasec details.fitem"},
+  {"name": "03-collection", "path": "/{bundle}", "ready": "#id-band-classic", "open": ".nftsec details.fitem"},
+  {"name": "04-charts", "path": "/{address}", "ready": "#id-cons-body", "scroll_to": "#id-cons-header"},
+  {"name": "05-historic", "path": "/widgets/historic/{address}", "ready": "#id-bars", "ready_script": "var c = window.Chart && Chart.getChart('id-bars'); return !!(c && c.data.datasets.length && c.data.datasets[0].data.length);", "settle": 10, "signed_in": true},
+  {"name": "06-pnl", "path": "/widgets/pnl/{address}?currency=usd&period=all&valuation=mve", "ready": [".pnl-table", ".pnl-chart-svg"], "signed_in": true},
+  {"name": "07-bundle", "path": "/{bundle}", "ready": "#id-band-classic"},
+  {"name": "08-dark", "path": "/{address}", "ready": "#id-band-classic", "theme": "asastats-dark"}
 ]

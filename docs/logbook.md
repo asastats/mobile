@@ -1678,3 +1678,93 @@ no dependencies). The whole lock was then checked with Bundler's
 range is met by the locked version, and every gem accepts Ruby 3.3.13. The
 first CI run with this lock is the real check. To change it again, prefer a
 runner (`bundle lock --update fastlane` on Ruby 3.3) over the Pi.
+
+### fastlane/Fastfile — Play release notes ride on the internal upload (2026-11-01)
+
+Until today every Android lane skipped `changelogs/`, so Play's release notes
+were never sent and would have had to be typed in Play Console. Read in
+supply 2.241.2 (`supply/lib/supply/uploader.rb`): release notes are written
+only into a release that the same run uploads or targets (`perform_upload_meta`
+with the run's version codes), and `promote_track` copies the internal release
+object, notes included, to production. So the `internal` lane (run by
+`android.yml` on every push) now uploads `changelogs/default.txt` with the
+AAB, and `production` carries it over. Consequence: the Play notes must be in
+the commit that builds the release.
+
+Also from that source: supply's screenshot types are phone, 7", 10", TV and
+Wear only (`Supply::SCREENSHOT_TYPES`). Play's desktop slot has no API, so
+the `screenshots-android-desktop` shots are uploaded by hand.
+
+### docs/publishing.rst (2026-11-01)
+
+New page: the whole store path, first release and updates, with the Store
+tasks. `docs/releasing.rst` "Screenshots and listings" now points there, and
+`docs/store_listing.rst` points at the `fastlane/metadata/` files instead of
+repeating the description and review notes, and has the corrected screenshot
+slots.
+
+### functional_tests/screenshots.json, test_screenshots.py — eight scenes (2026-11-01)
+
+Requested scenes: an opened asset and an opened NFT collection on the address
+page, the Historic data widget and the Profit and loss page, on the ZRN address
+(now the workflow's default). Selectors come from the frontend's classic
+layout: `.asasec details.fitem` and `.nftsec details.fitem` (the `<details>`
+contract in `templates/snippets/asas.html` and `snippets/nfts/collection.html`),
+`#id-bars`/`#id-asa-list` for historic (filled over the websocket, hence the
+longer `settle`), `.pnl-table`/`.pnl-chart-svg` for P&L. Rows are opened by
+setting `open`, as the frontend's own functional tests do, because a click on
+the summary grid lands on whichever cell is in the middle. Opening a collection
+fetches its items (`hx-trigger="toggle once"`), so the test waits for htmx and
+for the images in view to load. Historic and P&L are behind a plan, and P&L
+only shows addresses linked to the signed-in account, so both scenes skip
+without the demo account. Eight is Play's maximum for phone shots.
+
+### functional_tests/test_screenshots.py — Android bars hidden; first run read (2026-11-01)
+
+The first run's shots (old four scenes, `logs/mobile/store/screenshots/` in
+the workspace) all had the right pixel sizes, but on Android:
+
+- the 7", 10" and desktop shots carry the API 34 tablet taskbar with its
+  pinned apps (Gmail, Chrome, YouTube…) along the bottom;
+- in the dark scene the status and navigation bars stay light, so the white
+  9:41 is invisible. The site's `statusBar.ts` sets only the icon style and
+  expects edge-to-edge drawing; the emulator's bar keeps a light background.
+  The same may show on real Android phones in the dark theme: unchecked.
+
+The test now calls `SystemBars.hide()` (Capacitor core; it hides
+`WindowInsetsCompat.Type.systemBars()`, and the taskbar counts as the
+navigation bar) through `Capacitor.nativePromise` after each page load, so
+Android shots are full-screen. iOS keeps its status bar, which looked right.
+ZRN has no NFTs (its NFT figures are 0 and the asset pie is one slice), so
+the collection scene uses the bundle.
+
+### functional_tests — second screenshot run read (2026-11-01, run 41321783397)
+
+- **05-historic failed on every Android device:** it waited for
+  `#id-asa-list`, but the historic page sends its asset list only after a bar
+  is tapped (`historic.js`, `assets_begin`/`assets_end` on a segment click);
+  on load it only draws the charts. The scene now waits with `ready_script`
+  for Chart.js's own `Chart.getChart('id-bars')` to hold data, which survives
+  minification, unlike the page's `chartBars` variable.
+- **"Viewing full screen" over every Android shot:** the system's notice for
+  `SystemBars.hide()`. `run-android.sh screenshots` sets
+  `secure immersive_mode_confirmations confirmed`, and the test taps "Got it"
+  if it still shows.
+- **The round scroll-to-top button** (`#scroll-to-top`, the address pages)
+  covered the bottom right; the test hides it with an injected style.
+
+### functional_tests/test_local.py: the background push failed again, with evidence (2026-11-01)
+
+`functional.yml` run 41320936714, job `local`:
+`test_a_push_reaches_the_notification_shade` failed after all three sends
+(15:29–15:32 UTC), and the open-app push test right after it passed. The
+`push.txt` evidence answers the open question of the 2026-10-30 entry: Play
+services' GCM client showed `connected=mtalk.google.com:5228`, `connects=1`,
+`lastConnectionDurationS=0`, `Seen good heartbeat in last connection? false`,
+connected since 15:27:52, so it called itself connected while nothing came
+through. The logcat has no receipt for any of the three sends. Resending
+over a stalled connection cannot help, so `delivered()` now drops and
+restores the network (`cmd connectivity airplane-mode enable/disable` over
+Appium's `mobile: shell`, which `run-android.sh` allows) before each resend,
+and waits 20 s for a new connection. Untested on CI until the next failure
+of the first send; a pass on the first send does not exercise it.

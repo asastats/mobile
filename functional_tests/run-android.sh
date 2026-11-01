@@ -20,6 +20,8 @@ if [ "${1:-live}" = screenshots ]; then
   demo battery -e level 100 -e plugged false
   demo network -e wifi show -e level 4
   demo notifications -e visible false
+  # SystemBars.hide() would otherwise show "Viewing full screen" over the first shots.
+  "$ADB" shell settings put secure immersive_mode_confirmations confirmed
 fi
 
 appium --allow-insecure=uiautomator2:chromedriver_autodownload,uiautomator2:adb_shell > appium.log 2>&1 &

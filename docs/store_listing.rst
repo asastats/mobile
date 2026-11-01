@@ -171,7 +171,7 @@ Text limits
      - ``Track Algorand portfolios: ASAs, NFTs and DeFi positions, priced every block.``
    * - Description, both
      - 4000
-     - The current text is under *Current description* below.
+     - In ``fastlane/metadata/``, see *Where the texts live* below.
    * - What's new / release notes
      - 4000 / 500
      - Play calls it release notes.
@@ -184,116 +184,120 @@ Categories: Finance on both stores, no secondary App Store category. Support and
 marketing URL: https://www.asastats.com/.
 
 
-Current description
-~~~~~~~~~~~~~~~~~~~
+Where the texts live
+~~~~~~~~~~~~~~~~~~~~
 
-The text below is the one for both stores. Its working copy, with the other store fields,
-is ``capacitor/STORE-LISTING.md`` in the maintainer's workspace; change both together. The
-bracketed phrase stays only while wallet sign-in works on the build under review (see the
-rules at the top).
-
-.. code-block:: text
-
-    ASA Stats shows what any Algorand address holds and what it is worth right now. Enter an address or an .algo name to see every ASA, NFT, liquidity pool share and staked or lent position in one place, valued in ALGO, USD or EUR.
-
-    ASA Stats reads the Algorand chain directly and prices assets from the network's decentralised exchanges, so values follow the market, not a delayed feed.
-
-    TRACK
-    • Any address, no account needed: holdings, NFT collections with floor and estimated values, and DeFi positions across Algorand protocols.
-    • Live refresh: the figures on an address page are re-priced with every Algorand block, about every three seconds, without reloading the page.
-    • Bundles: combine several addresses or .algo names into one portfolio and give it a name.
-
-    UNDERSTAND
-    • History: how a portfolio's value changed over time.
-    • Profit and loss: what you gained or lost, per asset and per period.
-    • Export your transactions as CSV and share the file straight from your phone.
-
-    STAY INFORMED
-    • Alerts: set a rule on a portfolio total or an asset price, and get a notification when it is crossed.
-    • Links to asastats.com pages open in the app.
-
-    YOUR ACCOUNT, YOUR KEYS
-    • Sign in with email, Apple, Google, GitHub, Discord, Reddit or X[, or with your Pera or Defly wallet].
-    • ASA Stats never asks for, sees or stores your private keys or recovery phrase. Anything that needs a signature is signed in your own wallet app.
-    • No ads, no tracking, no analytics. Delete your account at any time from your profile.
-
-    ASA Stats is the same service as www.asastats.com: sign in with the same account and everything is there. It is not a wallet: it never holds your keys or funds, and any swap is signed in your own wallet app. Nothing in it is financial advice.
-
-
-Screenshot sizes
-----------------
+The texts are files in ``fastlane/metadata/``, uploaded by the Store workflow
+(:doc:`publishing`). Change them there and nowhere else. The App Store listing is en-US,
+the Play listing en-GB.
 
 .. list-table::
    :header-rows: 1
-   :widths: 40 35 25
+   :widths: 40 60
 
-   * - Slot
-     - Size, portrait
+   * - Field
+     - File
+   * - App Store name, subtitle
+     - ``en-US/name.txt``, ``en-US/subtitle.txt``
+   * - App Store description, keywords, promotional text
+     - ``en-US/description.txt``, ``en-US/keywords.txt``, ``en-US/promotional_text.txt``
+   * - App Store What's New
+     - ``en-US/release_notes.txt``
+   * - App Store URLs
+     - ``en-US/support_url.txt``, ``marketing_url.txt``, ``privacy_url.txt``
+   * - App Store category
+     - ``primary_category.txt``
+   * - App Store review notes and contact
+     - ``review_information/notes.txt``, ``review_information/email_address.txt``
+   * - Play title, short and full description
+     - ``android/en-GB/title.txt``, ``short_description.txt``, ``full_description.txt``
+   * - Play release notes
+     - ``android/en-GB/changelogs/default.txt``
+   * - Play promo video
+     - ``android/en-GB/video.txt``
+   * - Play icon, feature graphic
+     - ``android/en-GB/images/icon.png``, ``featureGraphic.png``
+
+The description is the same text on both stores, so change ``description.txt`` and
+``full_description.txt`` together. It names the Pera and Defly wallets, which sign in on
+the current builds; remove those words if a build under review loses wallet sign-in (see
+the rules at the top).
+
+
+Screenshots
+-----------
+
+``screenshots.yml`` makes every slot below except Android XR, and checks each shot's pixel
+size (:doc:`publishing`). Where the files go is in :doc:`publishing` as well.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 38 32 30
+
+   * - Slot, as the console names it
+     - Size
      - Count
-   * - iPhone 6.9 inch (required)
-     - 1320 by 2868, or 1290 by 2796
+   * - App Store: iPhone with Dynamic Island, medium display (required)
+     - 1206 by 2622, or 1179 by 2556
      - 3 to 10
-   * - iPhone 6.5 inch
-     - Not needed; Apple scales the 6.9 inch set
-     - 0
-   * - iPad 13 inch (required)
+   * - App Store: iPhone with Dynamic Island, large display
+     - 1320 by 2868, 1290 by 2796 or 1260 by 2736
+     - Optional
+   * - App Store: iPad 13 inch display (required)
      - 2064 by 2752, or 2048 by 2732
      - 3 to 10
-   * - Play phone (required)
-     - 9:16, 1080 by 1920 or more
-     - 2 to 8, 4 or more for featuring
-   * - Play 7 and 10 inch tablet
-     - 9:16 or 16:9, 320 to 3840 px per side
+   * - App Store: iPhone Duo
+     - 1398 by 2034, or 2007 by 2853
+     - Required for builds with the iOS 27.1 SDK, from April 2027
+   * - App Store: Apple Watch
+     - Not offered: there is no watchOS app
+     - 0
+   * - Play: phone (required)
+     - Exactly 9:16, 1080 by 1920
+     - 2 to 8, 4 or more at 1080 px or more for promotion
+   * - Play: 7 inch tablet (required)
+     - Exactly 9:16, 1080 by 1920
+     - 1 to 8
+   * - Play: 10 inch tablet (required)
+     - Exactly 9:16, 1440 by 2560 (sides 1080 to 7680)
+     - 1 to 8
+   * - Play: desktop
+     - 2560 by 1440, landscape. Uploaded by hand: the Play API has no desktop slot
+     - Optional, 4 to 8
+   * - Play: Android XR
+     - Not made; needs an XR emulator
      - Optional
-   * - Play feature graphic (required)
+   * - Play: feature graphic (required)
      - 1024 by 500, PNG or JPEG, no alpha
      - 1
-   * - Play app icon (required)
+   * - Play: app icon (required)
      - 512 by 512 PNG
      - 1
 
-Use the same scenes in the same order on every device: an address page with holdings and
-the total, the same page with live refresh running, a bundle, an NFT collection with
-floor and estimated values, the historic chart, profit and loss, the alerts modal beside a
-received notification, and a dark theme.
+The scenes are in ``functional_tests/screenshots.json``, the same eight in the same order
+on every device: the address page, the same page with its first asset opened, the bundle
+page with its first NFT collection opened (ZRN holds no NFTs), the address page's charts, the Historic data page, the Profit and loss page,
+a bundle, and the dark theme. The default address is ZRN
+(``ZRNRW3X4WMRJZLP2UZR5PECN4A23SW7QETVR4H53F6FFG3NHC6MVSLMQPM``).
+
+Historic data and Profit and loss are taken only when the run signs in with the demo
+account, and Profit and loss shows only addresses linked to that account, already
+processed. Play takes at most 8 phone shots, so a ninth scene replaces one of these.
+
+Scene keys: ``path`` (``{address}`` and ``{bundle}`` are the run's inputs; a scene with an
+empty one is skipped), ``ready`` (a selector, or a list that must all exist), ``ready_script`` (JavaScript
+that returns true once the page is drawn), ``open``
+(the first matching ``<details>`` row is opened and scrolled to the top), ``scroll_to``,
+``theme``, ``settle`` (seconds to wait before the shot, default 5) and ``signed_in``.
+
+On Android the system bars are hidden for every shot, so the tablets show no taskbar.
 
 
 Review notes
 ------------
 
-Paste this into App Store Connect, App Review Information, Notes. Fill the demo account in
-from the account the team maintains for review; it needs a plan with every widget and a
-linked address with real holdings. Never commit its credentials.
-
-.. code-block:: text
-
-    ASA Stats is a portfolio tracker for the Algorand blockchain. It reads public chain
-    data and shows what an address holds and what it is worth. The app is the same service
-    as www.asastats.com, which it loads, with native features added: push notifications
-    for alerts (Firebase Cloud Messaging and APNs), Universal Links for asastats.com
-    pages, native share for CSV exports, an offline screen, and Sign in with Apple.
-
-    No account is needed to look up an address. To see account features, sign in with the
-    demo account below.
-
-    Non-custodial: the app never asks for, sees or stores private keys or recovery
-    phrases. It holds no funds and transmits none. It is not a wallet. Anything that needs
-    a signature is signed by the user in their own separate wallet app.
-
-    Nothing is sold in the app. Some account features belong to plans that are obtained on
-    the website, outside the app. The app shows no prices, no purchase buttons and no links
-    or instructions for buying. It is a free companion to that web service (Guideline
-    3.1.3(f)).
-
-    Account deletion: Profile -> Account -> Delete account. The account is closed at once,
-    push notifications stop at once, and all data is permanently deleted within 7 days.
-
-    To try alerts: sign in, open Alerts, tap the button to turn on notifications and allow
-    them, then add a rule, for example the ALGO price rising above a value just over the
-    current price.
-
-    Demo account (email and password):
-    Email: <demo email>
-    Password: <demo password>
-
-    Contact: <support email>
+The notes are ``fastlane/metadata/review_information/notes.txt``; *ios listing* uploads
+them with the demo account's email and password from the secrets ``REVIEW_DEMO_USER`` and
+``REVIEW_DEMO_PASSWORD``, which App Store Connect shows in its Sign-In Information fields.
+The account needs a plan with every widget and a linked address with real holdings. Never
+commit its credentials. Play's App access form takes the same account, typed in by hand.

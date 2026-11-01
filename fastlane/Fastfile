@@ -69,9 +69,16 @@ platform :android do
     )
   end
 
-  desc "AAB_PATH to the internal testing track"
+  # The release notes ride on this release; "production" promotes it with them.
+  desc "AAB_PATH to the internal testing track, with changelogs/default.txt"
   lane :internal do
-    play(track: "internal", aab: ENV.fetch("AAB_PATH"), skip_upload_aab: false, release_status: "completed")
+    play(
+      track: "internal",
+      aab: ENV.fetch("AAB_PATH"),
+      skip_upload_aab: false,
+      skip_upload_changelogs: false,
+      release_status: "completed",
+    )
   end
 
   desc "Play texts, graphics and screenshots"

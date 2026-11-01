@@ -28,6 +28,7 @@ reviews. Why a given line of code or configuration looks the way it does is in
    firebase
    server_settings
    releasing
+   publishing
    beta_checklist
    store_listing
 

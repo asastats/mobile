@@ -170,10 +170,19 @@ def send_alert(title):
     assert "sent " in sent.stdout and "sent 0" not in sent.stdout, sent.stdout + sent.stderr
 
 
+def reconnect_fcm(driver):
+    """Drop and restore the emulator's network, so Play services opens a new FCM connection."""
+    for state in ("enable", "disable"):
+        driver.execute_script("mobile: shell", {"command": "cmd", "args": ["connectivity", "airplane-mode", state]})
+        time.sleep(5)
+    time.sleep(20)
+
+
 def delivered(driver, title, attempts=3):
     """Send `title` and return its notification from the shade, resending if it never shows.
 
-    A freshly booted emulator may not have its FCM connection up yet (logbook).
+    The emulator's FCM connection can report "connected" and still deliver nothing,
+    so each resend follows a reconnect (logbook).
     """
     for attempt in range(attempts):
         send_alert(title)
@@ -183,6 +192,7 @@ def delivered(driver, title, attempts=3):
         except TimeoutException:
             if attempt == attempts - 1:
                 raise
+            reconnect_fcm(driver)
 
 
 @needs_fcm

@@ -6,8 +6,9 @@ on:
   workflow_dispatch:
     inputs:
       address:
-        description: "Algorand address for the address scenes"
+        description: "Algorand address for the address, historic and P&L scenes"
         required: true
+        default: ZRNRW3X4WMRJZLP2UZR5PECN4A23SW7QETVR4H53F6FFG3NHC6MVSLMQPM
       bundle:
         description: "Bundle id (40 characters) for the bundle scene; empty skips it"
         required: false
