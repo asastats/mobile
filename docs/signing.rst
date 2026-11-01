@@ -1,7 +1,7 @@
 Signing keys and certificates
 =============================
 
-Four credentials sign or authorise builds. All of them stay outside the repository and
+Five credentials sign, authorise or publish builds. All of them stay outside the repository and
 reach CI as base64 secrets in ``asastats/mobile``. :doc:`conduct` explains the rules for
 handling them.
 
@@ -24,7 +24,16 @@ handling them.
      - Signing the iOS archive in CI. Optional, but see below.
    * - App Store Connect API key
      - ``ASC_KEY_ID``, ``ASC_ISSUER_ID``, ``ASC_KEY_P8_BASE64``
-     - Cloud-managed signing and the TestFlight upload.
+     - Cloud-managed signing and the TestFlight upload; the App Store lanes of
+       ``store.yml``.
+   * - Google Play service account
+     - ``PLAY_SERVICE_ACCOUNT_JSON_BASE64``
+     - The internal-track upload in ``android.yml`` and the Play lanes of ``store.yml``.
+       Optional.
+
+The review demo account is not a signing credential, but it is kept the same way:
+``REVIEW_DEMO_USER`` and ``REVIEW_DEMO_PASSWORD`` sign in ``screenshots.yml`` and fill the
+App Store review information.
 
 
 Android upload keystore
@@ -169,3 +178,20 @@ right of the page. Until you save, none of the ticks count.
 
 You never need to regenerate a provisioning profile by hand. CI uses cloud-managed
 signing and fetches a fresh one.
+
+
+Google Play service account
+---------------------------
+
+#. In Google Cloud Console enable the Google Play Android Developer API, then create a
+   service account with no roles and download a JSON key for it.
+#. In Play Console, :menuselection:`Users and permissions --> Invite new users`, enter the
+   service account's email, add the app, and allow releasing to testing tracks and
+   production, managing testing tracks, and managing the store presence.
+#. Set the secret from the repository folder:
+
+   .. code-block:: bash
+
+       base64 -w0 /path/to/play-service-account.json | gh secret set PLAY_SERVICE_ACCOUNT_JSON_BASE64
+
+Play can answer 403 for up to a day after the invitation.

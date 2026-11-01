@@ -207,7 +207,8 @@ def sign_in(driver):
     site_loaded(driver)
     driver.find_element("css selector", "#id_login").send_keys(USER)
     driver.find_element("css selector", "#id_password").send_keys(PASSWORD)
-    driver.find_element("css selector", "#login_form button[type=submit]").click()
+    # Not button[type=submit]: production's HTML minifier drops the default type (logbook).
+    driver.find_element("css selector", "#login_form button.primaryAction").click()
     wait(driver, lambda d: "/accounts/login/" not in d.current_url)
     site_loaded(driver)
 

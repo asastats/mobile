@@ -36,3 +36,9 @@ functional_tests/failures/
 docs/_build/
 coverage-*.xml
 plugins/*/android/build/
+
+functional_tests/screenshots/
+
+# Fastlane output
+fastlane/report.xml
+fastlane/README.md

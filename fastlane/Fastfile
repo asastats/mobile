@@ -1,0 +1,96 @@
+# Store lanes, run by .github/workflows/store.yml and android.yml; nothing here builds.
+# Texts and images: fastlane/metadata/ and fastlane/screenshots/ (docs/logbook.md).
+
+APP_ID = "com.asastats.app"
+
+platform :ios do
+  def asc_key
+    app_store_connect_api_key(
+      key_id: ENV.fetch("ASC_KEY_ID"),
+      issuer_id: ENV.fetch("ASC_ISSUER_ID"),
+      key_filepath: ENV.fetch("ASC_KEY_PATH"),
+    )
+  end
+
+  # Common to every App Store lane: no binary (ios.yml uploads it), no HTML preview to confirm.
+  def app_store(options)
+    upload_to_app_store(
+      {
+        api_key: asc_key,
+        app_identifier: APP_ID,
+        app_version: ENV.fetch("APP_VERSION"),
+        skip_binary_upload: true,
+        force: true,
+        precheck_include_in_app_purchases: false,
+      }.merge(options),
+    )
+  end
+
+  desc "App Store texts, review notes and screenshots; no submission"
+  lane :listing do
+    review = {
+      demo_user: ENV["REVIEW_DEMO_USER"],
+      demo_password: ENV["REVIEW_DEMO_PASSWORD"],
+    }.reject { |_, value| value.to_s.empty? }
+    app_store(
+      overwrite_screenshots: true,
+      app_review_information: review,
+      submit_for_review: false,
+    )
+  end
+
+  desc "Submit TestFlight build BUILD_NUMBER for review; released by hand after approval"
+  lane :submit do
+    app_store(
+      build_number: ENV.fetch("BUILD_NUMBER"),
+      skip_metadata: true,
+      skip_screenshots: true,
+      submit_for_review: true,
+      automatic_release: false,
+      phased_release: true,
+      submission_information: { add_id_info_uses_idfa: false },
+    )
+  end
+end
+
+platform :android do
+  # Every lane names what it uploads; the rest is skipped.
+  def play(options)
+    skip_all = {
+      skip_upload_apk: true,
+      skip_upload_aab: true,
+      skip_upload_metadata: true,
+      skip_upload_changelogs: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+    }
+    upload_to_play_store(
+      { package_name: APP_ID, json_key: ENV.fetch("PLAY_JSON_KEY_PATH") }.merge(skip_all).merge(options),
+    )
+  end
+
+  desc "AAB_PATH to the internal testing track"
+  lane :internal do
+    play(track: "internal", aab: ENV.fetch("AAB_PATH"), skip_upload_aab: false, release_status: "completed")
+  end
+
+  desc "Play texts, graphics and screenshots"
+  lane :listing do
+    play(skip_upload_metadata: false, skip_upload_images: false, skip_upload_screenshots: false)
+  end
+
+  desc "The internal release to production for ROLLOUT of users (default 0.2)"
+  lane :production do
+    play(
+      track: "internal",
+      track_promote_to: "production",
+      track_promote_release_status: "inProgress",
+      rollout: ENV.fetch("ROLLOUT", "0.2"),
+    )
+  end
+
+  desc "Production's staged release to all users"
+  lane :complete do
+    play(track: "production", rollout: "1")
+  end
+end

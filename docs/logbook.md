@@ -1550,3 +1550,96 @@ restored the window's `LIGHT_STATUS_BAR` flag (`dumpsys window`). `StatusBar`'s
 call resolved, but its effect on the flag was not checked. The icons did not visibly
 change over the light site page, and the offline page itself could not be
 opened without cutting the phone's network, so the visible result is unchecked.
+
+## Store automation: fastlane/Fastfile, Gemfile, store.yml, screenshots.yml (2026-11-01)
+
+### Why fastlane, and why only for the store side
+
+`ios.yml` already archives, signs and uploads every `main` push to TestFlight
+(run 41219073721: build 118178, "Upload succeeded"), and `android.yml` builds
+the signed `.aab`. Fastlane was added for what was still done by hand: the
+Play internal-track upload, the listing texts and screenshots on both stores,
+iOS review submission and the Play staged rollout. It builds nothing, and
+`match` is not used: cloud signing with the API key works.
+
+### `Gemfile.lock`
+
+Resolved on the Pi with `bundle lock --add-platform x86_64-linux arm64-darwin`
+(fastlane 2.240.1). It was **not installed** there: the Pi has no Ruby headers,
+so `nkf`, `bigdecimal`, `json` and others cannot compile. `ruby/setup-ruby` on
+the runners has them. The option names in the Fastfile, the 1320×2868 and
+2064×2752 screenshot sizes, the `app_review_information` merge (an option value
+wins, files fill the rest) and the rollout-only path in supply were checked
+against the unpacked 2.240.1 gem source, not by a run.
+
+### `android.yml`: every signed bundle goes to the internal track
+
+As with TestFlight, a re-run for a commit already uploaded fails on the build
+number ("Version code … has already been used"); push a new commit. The step is
+skipped while `PLAY_SERVICE_ACCOUNT_JSON_BASE64` is unset.
+
+### `store.yml`: "download listings" before the first upload
+
+`deliver` and `supply` upload whatever the folders hold. Downloading the live
+listings first means a field missing from the repository is not blanked. The
+job deletes `fastlane/metadata` and `fastlane/screenshots` first, because
+`deliver download_metadata` overwrites, and the artifact is committed by hand.
+
+### `functional_tests/test_screenshots.py`: Appium, not snapshot/screengrab
+
+Fastlane's `snapshot` needs an XCUITest target in `App.xcodeproj` (Swift), and
+`screengrab` an instrumented Android test. That would be two new suites only to
+open web pages. The Appium setup already installs the app, signs in and drives
+the WebView on both platforms. Screenshots are taken in the native context:
+the full screen at device resolution, with the status bar.
+
+- Orientation is forced to portrait: neither the manifest nor `Info.plist`
+  locks it, and the `pixel_tablet` AVD starts in landscape.
+- Phone AVD `pixel_2` (1080×1920): Play refuses a side longer than twice the
+  other, so 1080×2400 Pixel profiles are out.
+- Every shot is checked against the slot's size (`ASASTATS_SCREENSHOT_SIZE`),
+  so a changed simulator or AVD fails instead of uploading to the wrong slot.
+- The iOS device loop reads its list from fd 3: on stdin, pytest or `simctl`
+  could read the remaining lines.
+- Scenes are data (`screenshots.json`); selectors come from frontend
+  `templates/address.html` (`#id-band-classic`, `#id-cons-header`) and the
+  theme from `localStorage.theme` (`static/js/preferences.js`). Not yet run.
+
+### Correction, 2026-11-01: `Gemfile.lock` must suit the runners' Ruby, not the Pi's
+
+The first Android run with the Play secret (job 111930668027) failed in
+`ruby/setup-ruby` (Ruby 3.3.13): "CFPropertyList-3.0.9 requires ruby version
+< 3.2". `bundle lock` on the Pi resolved for its Ruby 3.1, and 3.0.9 is the
+only CFPropertyList that refuses 3.2+ (3.0.8 has no limit; 4.0.0 needs 3.2+
+but fastlane's dependencies want < 4.0). The lock now names 3.0.8; `bundle
+lock` on the Pi keeps it unchanged. Every other locked gem was checked against
+the rubygems.org compact index for Ruby 3.3.13: all fit. After any
+re-lock on the Pi, run the same check (the gem's `ruby:` field), or re-lock on
+a runner.
+
+### Correction, 2026-11-01: the first Screenshots and Store runs
+
+- **Screenshots** (run of 2026-11-01 11:40, all four jobs): every scene errored
+  in `conftest.sign_in` because the demo secrets were set and
+  `#login_form button[type=submit]` matched nothing on production. Production
+  minifies its HTML, and the minifier drops `type="submit"` because it is the
+  default for a button. The local suite renders unminified templates, so it
+  had always matched. The selector is now `button.primaryAction`, which is in
+  both. Everything before sign-in worked: the build, simulator and AVD
+  choice, boot, and the sessions.
+- **Store, "download listings"**: `deliver download_metadata` printed its
+  options and wrote nothing. Without `--force` it asks before overwriting,
+  and on CI (not interactive) it returns without asking, even when the
+  folder does not exist (`force_overwrite_metadata?`). It now passes `--force`.
+  `download_screenshots` and `supply init` do not ask.
+- Play's default listing language is **en-GB**, not en-US. Android files
+  live under `fastlane/metadata/android/en-GB/`.
+- The stores' old screenshots (the Flutter app) were not committed: neither
+  `supply` nor `deliver` deletes a store's screenshots when the local folder
+  for that device is empty (both checked in the 2.240.1 source), so they
+  stay until new ones are uploaded. The Play phone shots there are
+  1080×2400, so Play accepted a ratio above 2:1 at some point; `pixel_2`
+  stays anyway, since 9:16 fits every rule.
+- The texts come from `capacitor/STORE-LISTING.md`. The demo credentials
+  are not in `review_information/`: the `listing` lane takes them from the
+  `REVIEW_DEMO_*` secrets.

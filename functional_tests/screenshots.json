@@ -1,0 +1,6 @@
+[
+  {"name": "01-address", "path": "/{address}", "ready": "#id-band-classic"},
+  {"name": "02-charts", "path": "/{address}", "ready": "#id-cons-body", "scroll_to": "#id-cons-header"},
+  {"name": "03-bundle", "path": "/{bundle}", "ready": "#id-band-classic"},
+  {"name": "04-dark", "path": "/{address}", "ready": "#id-band-classic", "theme": "asastats-dark"}
+]

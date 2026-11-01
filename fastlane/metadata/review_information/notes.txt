@@ -1,0 +1,15 @@
+ASA Stats is a portfolio tracker for the Algorand blockchain. It reads public chain data and shows what an address holds and what it is worth. The app is the same service as www.asastats.com, which it loads, with native features added: push notifications for alerts (Firebase Cloud Messaging / APNs), Universal Links for asastats.com pages, native share for CSV exports, an offline screen, and Sign in with Apple.
+
+No account is needed to look up an address. To see account features, sign in with the demo account below.
+
+Non-custodial: the app never asks for, sees or stores private keys or recovery phrases. It holds no funds and transmits none. It is not a wallet. Anything that needs a signature is signed by the user in their own separate wallet app.
+
+Nothing is sold in the app. Some account features belong to plans that are obtained on the website, outside the app. The app shows no prices, no purchase buttons and no links or instructions for buying. It is a free companion to that web service (Guideline 3.1.3(f)).
+
+Account deletion: Profile -> Account -> Delete account. The account is closed at once, push notifications stop at once, and all data is permanently deleted within 7 days. The same steps are described at https://www.asastats.com/account-deletion/.
+
+To try alerts: sign in, open Alerts, tap the button to turn on notifications and allow them, then add a rule (for example ALGO price rises above a value just over the current price).
+
+The demo account's username and password are in the Sign-In Information fields.
+
+Contact: info@asastats.com

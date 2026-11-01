@@ -11,6 +11,16 @@ ADB="${ANDROID_HOME:-/usr/local/lib/android/sdk}/platform-tools/adb"
 "$ADB" shell am set-debug-app --persistent com.android.chrome
 # The cached AVD keeps an older build; Appium would skip installing ours (logbook).
 "$ADB" uninstall com.asastats.app.debug || true
+# Store screenshots: a fixed clock, full battery and wifi, no notification icons.
+if [ "${1:-live}" = screenshots ]; then
+  "$ADB" shell settings put global sysui_demo_allowed 1
+  demo() { "$ADB" shell am broadcast -a com.android.systemui.demo -e command "$@" > /dev/null; }
+  demo enter
+  demo clock -e hhmm 0941
+  demo battery -e level 100 -e plugged false
+  demo network -e wifi show -e level 4
+  demo notifications -e visible false
+fi
 
 appium --allow-insecure=uiautomator2:chromedriver_autodownload,uiautomator2:adb_shell > appium.log 2>&1 &
 for _ in $(seq 60); do
