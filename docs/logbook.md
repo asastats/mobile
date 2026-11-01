@@ -1807,3 +1807,27 @@ Android. The Themes card is a `<section>` in
 `div:has(> #id-appearance-tabs)` matched nothing and `SCROLL_TO` threw on null.
 The selector is now `section:has(> #id-appearance-tabs)`, and `SCROLL_TO`
 throws "nothing matches <selector>" so the next miss names itself.
+
+### Screenshots run after the Appearance fix (2026-11-01, evening)
+
+All 56 shots came back at the right sizes, and 07-appearance passed. On iOS,
+02 and 03 now start below the clock. Three things were wrong:
+
+- **Android 07-appearance, green tiles.** The cyberpunk card came out as
+  rgb(1, 243, 72) in rectangular patches on all four emulators, with correct
+  yellow next to them; iOS is correct at rgb(255, 242, 72). Cyberpunk's
+  `--color-base-100` is `oklch(94.51% .179 104.32)`, outside sRGB. The
+  emulator's WebView rasterises on SwiftShader (`-gpu swiftshader_indirect`),
+  and some of its tiles map that colour wrongly. Firefox on the Pi and iOS are
+  fine. `run-android.sh screenshots` now writes
+  `--disable-gpu-rasterization` to `/data/local/tmp/webview-command-line`.
+  WebView reads that file for a debuggable app (our debug build), on an
+  emulator image with ro.debuggable=1. This is a guess until the next run; if
+  the green stays, try a theme whose colours are in gamut.
+- **iOS 07-appearance:** the profile tabs ("Settings", "Appearance") showed
+  behind the clock. Anything above the scroll target draws behind the
+  transparent status bar. `SCROLL_TO` now leaves a fixed cover of the body's
+  background over the inset (0 px on Android).
+- **iOS 06-bundle in aqua:** dark clock on dark blue. A real app bug in
+  `frontend/wallet/src/app/statusBar.ts`, which did not read oklch colours;
+  fixed there (frontend logbook, same date).

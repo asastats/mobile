@@ -22,6 +22,8 @@ if [ "${1:-live}" = screenshots ]; then
   demo notifications -e visible false
   # SystemBars.hide() would otherwise show "Viewing full screen" over the first shots.
   "$ADB" shell settings put secure immersive_mode_confirmations confirmed
+  # SwiftShader's GPU raster drew cyberpunk's out-of-gamut yellow as green tiles (logbook).
+  "$ADB" shell 'echo "_ --disable-gpu-rasterization" > /data/local/tmp/webview-command-line'
 fi
 
 appium --allow-insecure=uiautomator2:chromedriver_autodownload,uiautomator2:adb_shell > appium.log 2>&1 &

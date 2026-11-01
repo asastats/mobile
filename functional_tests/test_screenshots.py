@@ -36,12 +36,15 @@ ORIENTATION = os.environ.get("ASASTATS_SCREENSHOT_ORIENTATION", "PORTRAIT")
 SETTLE = 5
 #: Floating controls that cover content in a still picture.
 HIDDEN = "#scroll-to-top"
-# Element top below the iOS status bar (safe-area inset) with a small margin.
+# Element top below the iOS status bar (safe-area inset) with a small margin; the strip
+# behind the bar gets the page background, so scrolled-past content does not show there.
 SCROLL_TO = (
-    "var probe = document.createElement('div');"
-    "probe.style.cssText = 'position: fixed; top: 0; height: env(safe-area-inset-top, 0px);';"
-    "document.body.appendChild(probe);"
-    "var inset = probe.getBoundingClientRect().height; probe.remove();"
+    "var cover = document.createElement('div');"
+    "cover.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; z-index: 2147483647;"
+    " height: env(safe-area-inset-top, 0px);';"
+    "cover.style.background = getComputedStyle(document.body).backgroundColor;"
+    "document.body.appendChild(cover);"
+    "var inset = cover.getBoundingClientRect().height;"
     "var el = document.querySelector(arguments[0]);"
     "if (!el) throw new Error('nothing matches ' + arguments[0]);"
     "var top = el.getBoundingClientRect().top + window.scrollY;"
