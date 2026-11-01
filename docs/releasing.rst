@@ -26,8 +26,9 @@ Workflows
      - The Appium suites (:doc:`testing`).
    * - ``screenshots.yml``
      - By hand only. Store screenshots of the live site in the app, one artifact per
-       device: ``screenshots-ios`` (iPhone 6.9", iPad 13"), ``screenshots-android-phone``,
-       ``-seven-inch`` and ``-ten-inch``.
+       device: ``screenshots-ios`` (folders ``iphone-medium``, ``iphone-large``, ``ipad``
+       and, when the runner has its simulator, ``iphone-duo``),
+       ``screenshots-android-phone``, ``-seven-inch``, ``-ten-inch`` and ``-desktop``.
    * - ``store.yml``
      - By hand only. Runs a lane of ``fastlane/Fastfile``: download the current listings,
        upload texts and screenshots, submit an iOS build for review, promote Play's

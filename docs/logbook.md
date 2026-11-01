@@ -1643,3 +1643,38 @@ a runner.
 - The texts come from `capacitor/STORE-LISTING.md`. The demo credentials
   are not in `review_information/`: the `listing` lane takes them from the
   `REVIEW_DEMO_*` secrets.
+
+### Correction, 2026-11-01: the store slots as the consoles show them
+
+The device list came from memory and was wrong in two places. Checked
+against App Store Connect's upload page and Apple's "Screenshot
+specifications" page (2026-11-01), and Play Console's asset sections (the
+user's screenshots, `logs/mobile/`):
+
+- **App Store:** the required iPhone slot is *iPhone with Dynamic Island
+  (medium display)*, 1206×2622 or 1179×2556 (an iPhone 17 Pro simulator).
+  The 6.9" set (1320×2868) is the optional *large display* slot. *iPhone Duo*
+  (1398×2034 outer, 2007×2853 inner) becomes required in April 2027 for the
+  iOS 27.1 SDK. Its slot is optional here and skipped when the runner's Xcode
+  has no such simulator. *Apple Watch* needs a watchOS app, and there is none.
+- **Play:** the phone, 7" and 10" slots require exactly 16:9 or 9:16. The
+  first choice (Nexus 7 at 1200×1920, `pixel_tablet` at 1600×2560) is 10:16.
+  `functional_tests/avd-display.sh` now sets an exact screen in the AVD's
+  `config.ini` before boot (the runner's `pre-emulator-launch-script`): 7" is
+  1080×1920 and 10" is 1440×2560, both at density 280 (617 and 823 dp wide,
+  so the site lays out as on a tablet). *Desktop* (optional, 4–8 shots) is
+  the 10" screen turned to landscape, 2560×1440. *Android XR* would need an
+  XR emulator image and is left out. Play's promotion needs 4+ phone shots of
+  at least 1080 px a side, so a run should cover four scenes, which means
+  the bundle scene needs a bundle id.
+
+**`Gemfile.lock`: fastlane 2.241.2, edited by hand.** `deliver` only knows the
+iPhone Duo sizes from 2.241, and 2.241 needs Ruby 3.2+, so the Pi (3.1)
+cannot resolve it. The fastlane block was rewritten from rubygems.org's
+compact index (new: `erb`; changed ranges: `excon`, `google-cloud-env`,
+`terminal-notifier`). Only `terminal-notifier` had to move (2.0.0 → 3.1.0,
+no dependencies). The whole lock was then checked with Bundler's
+`LockfileParser`: every spec's dependencies equal rubygems.org's, every
+range is met by the locked version, and every gem accepts Ruby 3.3.13. The
+first CI run with this lock is the real check. To change it again, prefer a
+runner (`bundle lock --update fastlane` on Ruby 3.3) over the Pi.

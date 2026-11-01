@@ -23,11 +23,13 @@ VALUES = {
     "address": os.environ.get("ASASTATS_SCREENSHOT_ADDRESS", ""),
     "bundle": os.environ.get("ASASTATS_SCREENSHOT_BUNDLE", ""),
 }
-#: The store slot, also the output folder name: iphone, ipad, phone, seven-inch, ten-inch.
+#: The store slot, also the output folder name (screenshots.yml lists them).
 SLOT = os.environ.get("ASASTATS_SCREENSHOT_SLOT", PLATFORM)
 OUTPUT = Path(os.environ.get("ASASTATS_SCREENSHOTS_DIR", HERE / "screenshots")) / SLOT
-#: "1320x2868": the size the store slot needs; empty skips the check.
-SIZE = os.environ.get("ASASTATS_SCREENSHOT_SIZE", "")
+#: "1206x2622|1179x2556": the sizes the store slot accepts; empty skips the check.
+SIZES = [size for size in os.environ.get("ASASTATS_SCREENSHOT_SIZE", "").split("|") if size]
+#: PORTRAIT, or LANDSCAPE for Play's desktop slot.
+ORIENTATION = os.environ.get("ASASTATS_SCREENSHOT_ORIENTATION", "PORTRAIT")
 #: Seconds after `ready` for charts and htmx swaps to finish drawing.
 SETTLE = 5
 
@@ -42,7 +44,7 @@ def session():
     options = ios_options() if PLATFORM == "ios" else android_options()
     driver = webdriver.Remote(os.environ.get("APPIUM_URL", "http://127.0.0.1:4723"), options=options)
     native(driver)
-    driver.orientation = "PORTRAIT"
+    driver.orientation = ORIENTATION
     site_loaded(driver)
     # Signed in only with the demo account's secrets; conftest's USER has a local default.
     if os.environ.get("APP_TEST_USER") and PASSWORD:
@@ -80,5 +82,6 @@ def test_scene(session, scene):
     target = OUTPUT / f"{scene['name']}.png"
     driver.get_screenshot_as_file(str(target))
 
-    if SIZE:
-        assert "x".join(map(str, png_size(target))) == SIZE, f"{target.name} is not {SIZE}"
+    if SIZES:
+        size = "x".join(map(str, png_size(target)))
+        assert size in SIZES, f"{target.name} is {size}, not {' or '.join(SIZES)}"
