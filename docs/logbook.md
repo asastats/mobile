@@ -1768,3 +1768,42 @@ restores the network (`cmd connectivity airplane-mode enable/disable` over
 Appium's `mobile: shell`, which `run-android.sh` allows) before each resend,
 and waits 20 s for a new connection. Untested on CI until the next failure
 of the first send; a pass on the first send does not exercise it.
+
+### functional_tests/test_screenshots.py: scrolled scenes under the iOS status bar (2026-11-01)
+
+The second 8-scene Screenshots run (downloaded to `logs/mobile/store/screenshots`, 56
+files, every pixel size right, historic drawn on all devices) showed one
+defect: on both iPhones and the iPad, the scenes that scroll (02-asset,
+03-collection, 04-charts) put the content under the status bar, so the clock
+overlapped "8,412.7316 ALPHA" and "1 from Poppin Puffins". The app's
+WebView runs edge to edge and the site pads its header with
+`env(safe-area-inset-top)`. `scrollIntoView({block: 'start'})` puts the
+element at the WebView's top edge, which is behind the bar. Both `open` and
+`scroll_to` now use `SCROLL_TO`. It reads the inset from a fixed probe element
+and scrolls to the element's top minus the inset minus 12 px. On Android the
+bars are hidden, so the inset is 0 and only the margin applies.
+
+The same run shows that ZRN's composition pie is one slice (all Balance), in
+01, 04 and 08. That's left as is for now; moving 04-charts to `{bundle}`
+is the open option.
+
+### functional_tests/screenshots.json: charts out, aqua and cyberpunk in (2026-11-01)
+
+The user asked for shots in the `aqua` and `cyberpunk` themes and for one
+showing the Appearance page, and for the duplicate shot to go. 04-charts went
+out: ZRN's composition pie is one slice, and 01 and the bundle scene already
+show the charts. The bundle scene (now 06) uses `aqua`. The new 07-appearance
+opens `/profile/appearance/` in `cyberpunk` and scrolls to the Themes card
+(`div:has(> #id-appearance-tabs)`, as the card has no id of its own). The
+cyberpunk swatch shows as the selected one, as in the user's reference shots.
+Historic and P&L moved up to 04 and 05. The page needs a signed-in account at
+Asastatser or higher (`Profile.can_access_appearance_page`); a lower demo
+account gets redirected to subscriptions, and the scene then times out
+waiting for `#id-appearance-tabs`.
+
+Correction (2026-11-01, same day): the first run failed 07-appearance on
+Android. The Themes card is a `<section>` in
+`frontend/website/templates/profile_appearance.html`, not a `div`, so
+`div:has(> #id-appearance-tabs)` matched nothing and `SCROLL_TO` threw on null.
+The selector is now `section:has(> #id-appearance-tabs)`, and `SCROLL_TO`
+throws "nothing matches <selector>" so the next miss names itself.

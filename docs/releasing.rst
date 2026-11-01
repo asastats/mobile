@@ -130,8 +130,7 @@ Before you promote a build
 Screenshots and listings
 ------------------------
 
-Taking the screenshots, uploading the listings and the store releases themselves are in
-:doc:`publishing`.
+:doc:`publishing` covers the screenshots, the listing uploads and the store releases.
 
 What changes without a new build
 --------------------------------

@@ -36,6 +36,17 @@ ORIENTATION = os.environ.get("ASASTATS_SCREENSHOT_ORIENTATION", "PORTRAIT")
 SETTLE = 5
 #: Floating controls that cover content in a still picture.
 HIDDEN = "#scroll-to-top"
+# Element top below the iOS status bar (safe-area inset) with a small margin.
+SCROLL_TO = (
+    "var probe = document.createElement('div');"
+    "probe.style.cssText = 'position: fixed; top: 0; height: env(safe-area-inset-top, 0px);';"
+    "document.body.appendChild(probe);"
+    "var inset = probe.getBoundingClientRect().height; probe.remove();"
+    "var el = document.querySelector(arguments[0]);"
+    "if (!el) throw new Error('nothing matches ' + arguments[0]);"
+    "var top = el.getBoundingClientRect().top + window.scrollY;"
+    "window.scrollTo(0, Math.max(0, top - inset - 12));"
+)
 #: Signed in as the demo account; conftest's USER has a local default, so test the variable.
 SIGNED_IN = bool(os.environ.get("APP_TEST_USER") and PASSWORD)
 #: True once every image of `arguments[0]` inside the viewport has loaded (lazy ones below it never do).
@@ -100,15 +111,16 @@ def test_scene(session, scene):
         opened = driver.execute_script(
             "var row = document.querySelector(arguments[0]);"
             "if (!row) return false;"
-            "row.open = true; row.scrollIntoView({block: 'start'}); return true;",
+            "row.open = true; return true;",
             scene["open"],
         )
         assert opened, f"{scene['name']}: nothing matches {scene['open']}"
+        driver.execute_script(SCROLL_TO, scene["open"])
         time.sleep(1)
         wait(driver, lambda d: d.execute_script("return !document.querySelector('.htmx-request');"))
         wait(driver, lambda d: d.execute_script(IMAGES_DRAWN, scene["open"]))
     elif scene.get("scroll_to"):
-        driver.execute_script("document.querySelector(arguments[0]).scrollIntoView({block: 'start'});", scene["scroll_to"])
+        driver.execute_script(SCROLL_TO, scene["scroll_to"])
     driver.execute_script(
         "var style = document.createElement('style');"
         "style.textContent = arguments[0] + ' { display: none !important; }';"

@@ -31,7 +31,7 @@ with the files in ``fastlane/``.
      - ``store.yml`` runs one task (a lane of ``fastlane/Fastfile``) picked from its
        "What to do" list.
 
-To run a manual workflow open the repository on GitHub, then :menuselection:`Actions -->
+To run a manual workflow, open the repository on GitHub, then :menuselection:`Actions -->
 Store` (or Screenshots) :menuselection:`--> Run workflow`, fill the boxes and press Run
 workflow. Files a run produces are under Artifacts at the bottom of the run's page, each
 as a zip.
@@ -58,7 +58,7 @@ The Store tasks
      - No, until that version is released
    * - ios submit
      - Attaches the TestFlight build given in **build_number** to that version and sends it
-       to review. Release after approval is by hand, phased over 7 days.
+       to review. You release it by hand after approval, and Apple phases it in over 7 days.
      - After you release it
    * - android listing
      - Uploads the Play texts, icon, feature graphic and screenshots from
@@ -88,7 +88,7 @@ These stay in the consoles, filled once and checked at every release
 * App Store Connect: App Privacy, age rating, pricing and availability.
 * Play Console: Data safety, the App content declarations (financial features, ads,
   target audience, app access), the content rating questionnaire, countries.
-* Play's **desktop** screenshots. The Play API has no slot for them, so upload the
+* Play's desktop screenshots. The Play API has no slot for them, so upload the
   ``screenshots-android-desktop`` shots by hand on the main store listing in Play
   Console.
 * Pressing Release on an approved App Store version, and pausing a rollout.
@@ -129,14 +129,14 @@ release notes, and it must keep iPad support. Play Console keeps calling the app
 Stats Mobile" until "android listing" uploads the new title.
 
 #. **Compare with the stores.** Run Store with *download listings* and compare the
-   artifact with ``fastlane/metadata/``. A field whose file is missing locally is left
-   alone on upload, never cleared, but read the differences anyway: the artifact shows what
-   reviewers saw last time.
+   artifact with ``fastlane/metadata/``. Fastlane leaves a field alone when its file is
+   missing locally, so an upload never clears one. Read the differences anyway, because
+   the artifact shows what reviewers saw last time.
 
 #. **Make the build.** Set ``version`` in ``package.json`` (``1.1.0``), push to ``main``
-   and wait for both workflows. Note the iOS run's build number: its log prints
-   ``Build number …``, and it is under TestFlight in App Store Connect, where a build stays "Processing"
-   for 5 to 30 minutes.
+   and wait for both workflows. Note the iOS run's build number. Its log prints
+   ``Build number …``, and TestFlight in App Store Connect lists the build after 5 to 30
+   minutes of "Processing".
 
 #. **Test the store builds.** Install from TestFlight and from the Play internal testing
    link (:doc:`releasing`) and work through :doc:`beta_checklist`, including an iPad.
@@ -164,8 +164,8 @@ Stats Mobile" until "android listing" uploads the new title.
    This Version`; the phased release then reaches all users over 7 days.
 
 #. **Google Play, on release day.** Run *android listing*, then *android production*
-   with ``0.2``. Watch Android vitals and the reviews for a
-   few days, then run *android complete*.
+   with ``0.2``. Watch Android vitals and the reviews for a few days, then run
+   *android complete*.
 
 Do the Play steps on the day the iOS version is released, so that both pages describe the
 new app at the same time.
@@ -180,8 +180,8 @@ a deploy, and some features can be switched per platform on the server (:doc:`re
 icons, the splash screen, manifest or entitlement changes and the Capacitor version.
 
 #. **Version.** Raise ``version`` in ``package.json`` (``1.1.0`` to ``1.1.1`` or
-   ``1.2.0``). The App Store needs a new version for every release; the build numbers
-   follow by themselves.
+   ``1.2.0``). The App Store needs a new version for every release; CI sets the build
+   numbers.
 
 #. **Release notes, before the push.** Write them in
    ``fastlane/metadata/en-US/release_notes.txt`` (App Store, up to 4000 characters) and
@@ -192,8 +192,8 @@ icons, the splash screen, manifest or entitlement changes and the Capacitor vers
 #. **Build and test.** Push to ``main``, note the iOS build number, test the TestFlight
    and internal testing builds.
 
-#. **Listing changes, if any.** Change only the files that need it. New screenshots are
-   needed when the screens look different, not for every release.
+#. **Listing changes, if any.** Change only the files that need it. Take new screenshots only
+   when the screens look different.
 
 #. **App Store.** Run *ios listing* (it creates the new version and uploads its notes,
    so it is needed every time), check the version in App Store Connect, then *ios submit*
@@ -207,7 +207,7 @@ A rollout that goes wrong
 
 * Play: :menuselection:`Test and release --> Production --> Releases`, then Halt rollout.
   Users who have it keep it. Fix, push (a new build reaches the internal track), and run
-  *android production* again: the new release replaces the halted one.
+  *android production* again. The new release replaces the halted one.
 * App Store: pause the phased release on the version page. A pause lasts up to 30 days;
   anyone can still update by hand from the App Store. A fix needs a new version and a new
   submission.

@@ -187,7 +187,7 @@ marketing URL: https://www.asastats.com/.
 Where the texts live
 ~~~~~~~~~~~~~~~~~~~~
 
-The texts are files in ``fastlane/metadata/``, uploaded by the Store workflow
+The texts are files in ``fastlane/metadata/``, and the Store workflow uploads them
 (:doc:`publishing`). Change them there and nowhere else. The App Store listing is en-US,
 the Play listing en-GB.
 
@@ -227,8 +227,9 @@ the rules at the top).
 Screenshots
 -----------
 
-``screenshots.yml`` makes every slot below except Android XR, and checks each shot's pixel
-size (:doc:`publishing`). Where the files go is in :doc:`publishing` as well.
+``screenshots.yml`` makes every screenshot slot below except Apple Watch, Android XR and,
+while GitHub's Xcode has no Duo simulator, iPhone Duo. It checks each shot's pixel size.
+:doc:`publishing` says where the files go.
 
 .. list-table::
    :header-rows: 1
@@ -262,7 +263,7 @@ size (:doc:`publishing`). Where the files go is in :doc:`publishing` as well.
      - Exactly 9:16, 1440 by 2560 (sides 1080 to 7680)
      - 1 to 8
    * - Play: desktop
-     - 2560 by 1440, landscape. Uploaded by hand: the Play API has no desktop slot
+     - 2560 by 1440, landscape. Uploaded by hand, because the Play API has no desktop slot
      - Optional, 4 to 8
    * - Play: Android XR
      - Not made; needs an XR emulator
@@ -274,23 +275,48 @@ size (:doc:`publishing`). Where the files go is in :doc:`publishing` as well.
      - 512 by 512 PNG
      - 1
 
-The scenes are in ``functional_tests/screenshots.json``, the same eight in the same order
-on every device: the address page, the same page with its first asset opened, the bundle
-page with its first NFT collection opened (ZRN holds no NFTs), the address page's charts, the Historic data page, the Profit and loss page,
-a bundle, and the dark theme. The default address is ZRN
-(``ZRNRW3X4WMRJZLP2UZR5PECN4A23SW7QETVR4H53F6FFG3NHC6MVSLMQPM``).
+The scenes are in ``functional_tests/screenshots.json``. Every device gets the same eight,
+in this order:
 
-Historic data and Profit and loss are taken only when the run signs in with the demo
-account, and Profit and loss shows only addresses linked to that account, already
-processed. Play takes at most 8 phone shots, so a ninth scene replaces one of these.
+#. the address page;
+#. the same page with its first asset opened;
+#. the bundle page with its first NFT collection opened (ZRN holds no NFTs);
+#. the Historic data page;
+#. the Profit and loss page;
+#. the bundle page in the ``aqua`` theme;
+#. the Appearance page's theme list in the ``cyberpunk`` theme;
+#. the address page in the dark theme.
 
-Scene keys: ``path`` (``{address}`` and ``{bundle}`` are the run's inputs; a scene with an
-empty one is skipped), ``ready`` (a selector, or a list that must all exist), ``ready_script`` (JavaScript
-that returns true once the page is drawn), ``open``
-(the first matching ``<details>`` row is opened and scrolled to the top), ``scroll_to``,
-``theme``, ``settle`` (seconds to wait before the shot, default 5) and ``signed_in``.
+The default address is ZRN (``ZRNRW3X4WMRJZLP2UZR5PECN4A23SW7QETVR4H53F6FFG3NHC6MVSLMQPM``).
+The run takes Historic data, Profit and loss and Appearance only when it signs in with the
+demo account. Appearance also needs the account at the Asastatser tier or higher, or the
+site sends it to the subscriptions page and the scene fails waiting for the tabs. Profit
+and loss shows only addresses linked to that account whose profit and loss is already
+processed. Play takes at most 8 phone shots, so a ninth scene has to replace one of these.
 
-On Android the system bars are hidden for every shot, so the tablets show no taskbar.
+Each scene can set:
+
+``path``
+    The page. ``{address}`` and ``{bundle}`` are the run's inputs; a scene whose input is
+    empty is skipped.
+``ready``
+    A selector, or a list of selectors, that must exist before the shot.
+``ready_script``
+    JavaScript that returns true once the page is drawn.
+``open``
+    Opens the first matching ``<details>`` row and scrolls it to the top, below the
+    status bar.
+``scroll_to``
+    Scrolls the first match to the top, below the status bar.
+``theme``
+    The site theme, such as ``asastats-dark``, ``aqua`` or ``cyberpunk`` (the names in the
+    frontend's ``AVAILABLE_THEMES_BY_SCHEME``).
+``settle``
+    Seconds to wait before the shot, 5 by default.
+``signed_in``
+    Skip the scene unless the run signs in.
+
+On Android the test hides the system bars for every shot, so the tablets show no taskbar.
 
 
 Review notes
