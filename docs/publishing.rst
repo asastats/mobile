@@ -87,7 +87,8 @@ These stay in the consoles, filled once and checked at every release
 
 * App Store Connect: App Privacy, age rating, pricing and availability.
 * Play Console: Data safety, the App content declarations (financial features, ads,
-  target audience, app access), the content rating questionnaire, countries.
+  target audience, sign-in details for the reviewers: :doc:`store_listing`, *Play: App
+  access*), the content rating questionnaire, countries.
 * Play's desktop screenshots. The Play API has no slot for them, so upload the
   ``screenshots-android-desktop`` shots by hand on the main store listing in Play
   Console.
@@ -147,8 +148,9 @@ Stats Mobile" until "android listing" uploads the new title.
    processed (:doc:`store_listing`, *Screenshots*). Download the artifacts, choose, and
    copy:
 
-   * all iOS folders into ``fastlane/screenshots/en-US/``, file names keeping their
-     scene order (``01-…``). Deliver sorts iPhone and iPad by pixel size;
+   * all iOS folders into ``fastlane/screenshots/en-US/``, each file prefixed with its
+     folder (``ipad-01-address.png``), because the folders share file names. Deliver
+     sorts iPhone and iPad by pixel size;
    * Android phone, 7 inch and 10 inch into
      ``fastlane/metadata/android/en-GB/images/`` under ``phoneScreenshots``,
      ``sevenInchScreenshots`` and ``tenInchScreenshots``.

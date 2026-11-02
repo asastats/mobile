@@ -20,8 +20,8 @@ Rules the texts must follow
 * Name every social sign-in provider only if social sign-in ships in that build.
 * iPad support stays. The earlier app shipped for iPhone and iPad, and an update cannot
   drop a device family. 13 inch iPad screenshots are therefore required.
-* Take screenshots from a store build with a demo account, so no real holdings show. If
-  swaps are hidden on iOS, they must not appear in the iOS screenshots.
+* Screenshots show ZRN, our own testing address, so every figure in them is public
+  Mainnet data. If swaps are hidden on iOS, they must not appear in the iOS screenshots.
 
 
 Swap widgets on iOS
@@ -130,8 +130,8 @@ Other Play forms
 * Ads: none.
 * Target audience: 18 and over.
 * Government app, News app: no.
-* App access: "All or some functionality is restricted", with the demo account below.
-  Add the instruction that no account is needed to look up an address.
+* App access: filled in by hand, because the Play API has no such field (``notes.txt``
+  goes to Apple only). See *Play: App access* below.
 
 
 Age ratings
@@ -318,6 +318,12 @@ Each scene can set:
 
 On Android the test hides the system bars for every shot, so the tablets show no taskbar.
 
+Not made, and all optional: App Store *App Previews* (up to three short screen-recording
+videos per device slot) and the *Header and Search Results* assets (a product page banner,
+5244 by 2950 or 3840 by 1646, and a search result image). Without a search result asset
+the store shows the first screenshots there. Fastlane uploads neither and leaves any that
+were added by hand.
+
 
 Review notes
 ------------
@@ -327,3 +333,29 @@ them with the demo account's email and password from the secrets ``REVIEW_DEMO_U
 ``REVIEW_DEMO_PASSWORD``, which App Store Connect shows in its Sign-In Information fields.
 The account needs a plan with every widget and a linked address with real holdings. Never
 commit its credentials. Play's App access form takes the same account, typed in by hand.
+
+
+Play: App access
+~~~~~~~~~~~~~~~~
+
+Play's reviewers sign in with the account given in this form. Do it once, and again only
+when the demo account's password changes.
+
+#. In Play Console open :menuselection:`Monitor and improve --> Policy and programs -->
+   App content --> Sign-in details` (formerly *App access*).
+#. Choose "All or some functionality in my app is restricted", then
+   :guilabel:`Add instructions`.
+#. Name ``Demo account``; the username and password of the account the secrets
+   ``REVIEW_DEMO_USER`` and ``REVIEW_DEMO_PASSWORD`` hold; leave "No other information is
+   required" unticked, and paste this into the field for other information:
+
+   .. code-block:: text
+
+      No account is needed to look up an address: enter any Algorand address or .algo
+      name on the start screen, for example
+      ZRNRW3X4WMRJZLP2UZR5PECN4A23SW7QETVR4H53F6FFG3NHC6MVSLMQPM or
+      devpool.asastats.algo. Sign in with the email and password above to see the
+      account features (bundles, historic data, profit and loss, alerts). The app is
+      non-custodial: it never asks for private keys and holds no funds.
+
+#. :guilabel:`Add`, then :guilabel:`Save`. App content then shows the row as done.
