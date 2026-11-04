@@ -1,6 +1,13 @@
-ASA Stats is a portfolio tracker for the Algorand blockchain. It reads public chain data and shows what an address holds and what it is worth. The app is the same service as www.asastats.com, which it loads, with native features added: push notifications for alerts (Firebase Cloud Messaging / APNs), Universal Links for asastats.com pages, native share for CSV exports, an offline screen, and Sign in with Apple.
+How to sign in with the demo account: the field on the start screen ("Enter Algorand address") is not a login field. It takes only an Algorand address or .algo name, so a username or password typed there gives "Invalid Algorand address!". Instead:
+1. On the start screen, scroll down to the footer and tap "Log in" (in the ABOUT column).
+2. A "Log in to ASA Stats" screen opens on its "Log in" tab. Enter the demo account's username in the "Login" field and its password in the "Password" field. Both are in the Sign-In Information fields.
+3. Tap the "Log in" button.
 
-No account is needed to look up an address. To see account features, sign in with the demo account below.
+Signing in opens the account features (bundles, historic data, profit and loss, alerts).
+
+No account is needed to look up an address: enter any Algorand address or .algo name in the field on the start screen and tap "Track", for example ZRNRW3X4WMRJZLP2UZR5PECN4A23SW7QETVR4H53F6FFG3NHC6MVSLMQPM or devpool.asastats.algo.
+
+ASA Stats is a portfolio tracker for the Algorand blockchain. It reads public chain data and shows what an address holds and what it is worth. The app is the same service as www.asastats.com, which it loads, with native features added: push notifications for alerts (Firebase Cloud Messaging / APNs), Universal Links for asastats.com pages, native share for CSV exports, an offline screen, and Sign in with Apple.
 
 Non-custodial: the app never asks for, sees or stores private keys or recovery phrases. It holds no funds and transmits none. It is not a wallet. Anything that needs a signature is signed by the user in their own separate wallet app.
 
@@ -9,7 +16,5 @@ Nothing is sold in the app. Some account features belong to plans that are obtai
 Account deletion: Profile -> Account -> Delete account. The account is closed at once, push notifications stop at once, and all data is permanently deleted within 7 days. The same steps are described at https://www.asastats.com/account-deletion/.
 
 To try alerts: sign in, open Alerts, tap the button to turn on notifications and allow them, then add a rule (for example ALGO price rises above a value just over the current price).
-
-The demo account's username and password are in the Sign-In Information fields.
 
 Contact: info@asastats.com

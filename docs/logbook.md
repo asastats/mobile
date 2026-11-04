@@ -1831,3 +1831,23 @@ All 56 shots came back at the right sizes, and 07-appearance passed. On iOS,
 - **iOS 06-bundle in aqua:** dark clock on dark blue. A real app bug in
   `frontend/wallet/src/app/statusBar.ts`, which did not read oklch colours;
   fixed there (frontend logbook, same date).
+
+### Correction, 2026-11-02: the first "ios listing" run
+
+Run 41420146726 passed and did everything. It found no change to the texts
+(the user had typed the same ones by hand), set the review notes and the demo
+sign-in, deleted every en-US screenshot set (`APP_IPHONE_55`, `_65`, `_61`,
+`APP_IPAD_PRO_129`, `APP_IPAD_PRO_3GEN_129`: the user's hand uploads and the
+Flutter app's leftovers) and uploaded the 24 shots, whose processing took
+7.5 minutes. The version page looked unchanged because the medium iPhone and
+iPad images were the same ones. Precheck warns "found: google" in the
+description (rule: other platforms). That is the "Google" sign-in provider, and
+it is a warning only; leave it unless a reviewer objects.
+
+### fastlane/metadata/review_information/notes.txt: Apple could not sign in (2026-11-04)
+
+Apple rejected the first submission of 1.1.0: "unable to sign in" with the demo
+account. Their screenshot shows why: they typed the credentials into the start
+screen's address field and got "Invalid Algorand address!". The only Log in
+link they could see is in the footer, and the notes never said so. The notes
+now open with the sign-in steps and say what the address field is for.

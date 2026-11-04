@@ -347,15 +347,17 @@ when the demo account's password changes.
    :guilabel:`Add instructions`.
 #. Name ``Demo account``; the username and password of the account the secrets
    ``REVIEW_DEMO_USER`` and ``REVIEW_DEMO_PASSWORD`` hold; leave "No other information is
-   required" unticked, and paste this into the field for other information:
+   required" unticked, and paste this into the field for other information
+   (500 characters at most):
 
    .. code-block:: text
 
-      No account is needed to look up an address: enter any Algorand address or .algo
-      name on the start screen, for example
-      ZRNRW3X4WMRJZLP2UZR5PECN4A23SW7QETVR4H53F6FFG3NHC6MVSLMQPM or
-      devpool.asastats.algo. Sign in with the email and password above to see the
-      account features (bundles, historic data, profit and loss, alerts). The app is
-      non-custodial: it never asks for private keys and holds no funds.
+      The start screen field takes only an Algorand address or .algo name, not a login. To sign in:
+      1. Scroll down to the footer and tap "Log in".
+      2. Enter the username and password above on the next screen.
+      3. Tap "Log in".
+      This opens account features (bundles, historic data, P&L, alerts).
+      No account is needed to look up an address, for example ZRNRW3X4WMRJZLP2UZR5PECN4A23SW7QETVR4H53F6FFG3NHC6MVSLMQPM or devpool.asastats.algo.
+      Non-custodial: it never asks for private keys and holds no funds.
 
 #. :guilabel:`Add`, then :guilabel:`Save`. App content then shows the row as done.
