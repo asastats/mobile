@@ -1,3 +1,5 @@
+What changed in 1.1.1: one fix to the offline screen, nothing else. After a brief connection drop, for example when returning from another app, the app could show its "No connection" screen and stay there until Retry was tapped. It now shows "Reconnecting…", checks the connection by itself and returns to the page the user was on as soon as the site answers. A page load that was only interrupted by a newer one no longer counts as lost connection. No new features, permissions, data collection, purchases or third-party services. Sign-in and the demo account are unchanged.
+
 How to sign in with the demo account: the field on the start screen ("Enter Algorand address") is not a login field. It takes only an Algorand address or .algo name, so a username or password typed there gives "Invalid Algorand address!". Instead:
 1. On the start screen, scroll down to the footer and tap "Log in" (in the ABOUT column).
 2. A "Log in to ASA Stats" screen opens on its "Log in" tab. Enter the demo account's username in the "Login" field and its password in the "Password" field. Both are in the Sign-In Information fields.

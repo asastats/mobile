@@ -1,8 +1,12 @@
 package com.asastats.app;
 
 import android.content.res.Configuration;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.SystemClock;
+import android.view.ViewGroup;
 import android.webkit.CookieManager;
+import android.webkit.RenderProcessGoneDetail;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
@@ -14,11 +18,61 @@ import org.json.JSONObject;
 
 public class MainActivity extends BridgeActivity {
 
+    /** The page to reopen after the WebView's renderer died; in the bundle only for that restart. */
+    static final String RENDERER_PAGE = "asastats_renderer_page";
+
+    /** A second loss within this time gives up: the page itself may be what crashes it. */
+    static final long RENDERER_RETRY_MS = 10_000;
+
+    /** Static: it must survive recreate(). */
+    private static long lastRendererRestart = -RENDERER_RETRY_MS;
+
+    private String rendererPage;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         bridge.setWebViewClient(new SiteErrorPagesClient(bridge));
         AlertMessagingService.createChannel(this);
+        String page = savedInstanceState == null ? null : savedInstanceState.getString(RENDERER_PAGE);
+        if (isSitePage(page, bridge.getServerUrl())) {
+            bridge.getWebView().loadUrl(page);
+        }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (rendererPage != null) outState.putString(RENDERER_PAGE, rendererPage);
+    }
+
+    /**
+     * Android killed or crashed the WebView's renderer: rebuild the screen on `page`
+     * instead of letting Android close the app (docs/logbook.md).
+     *
+     * @return false when it happened again too soon, which closes the app as before
+     */
+    boolean restartAfterRendererLoss(WebView view, String page) {
+        long now = SystemClock.elapsedRealtime();
+        if (now - lastRendererRestart < RENDERER_RETRY_MS) return false;
+        lastRendererRestart = now;
+        rendererPage = page;
+        // The dead WebView must not be used again; destroyed, later calls are ignored.
+        if (view.getParent() instanceof ViewGroup) ((ViewGroup) view.getParent()).removeView(view);
+        view.destroy();
+        recreate();
+        return true;
+    }
+
+    /** Only pages of the site itself are reopened. */
+    static boolean isSitePage(String page, String serverUrl) {
+        if (page == null || serverUrl == null) return false;
+        Uri site = Uri.parse(serverUrl);
+        Uri url = Uri.parse(page);
+        return site.getScheme() != null
+            && site.getScheme().equals(url.getScheme())
+            && site.getAuthority() != null
+            && site.getAuthority().equals(url.getAuthority());
     }
 
     /** The WebView writes cookies to disk lazily; a killed app would come back with an older session (docs/logbook.md). */
@@ -66,6 +120,22 @@ public class MainActivity extends BridgeActivity {
                 if (!page.startsWith(errorUrl)) failedPage = page;
                 view.loadUrl(errorUrl);
             }
+        }
+
+        /** The site page the reader is on, for a renderer restart; the error page never counts. */
+        private String currentPage;
+
+        @Override
+        public void doUpdateVisitedHistory(WebView view, String url, boolean isReload) {
+            super.doUpdateVisitedHistory(view, url, isReload);
+            if (isSitePage(url, bridge.getServerUrl())) currentPage = url;
+        }
+
+        @Override
+        public boolean onRenderProcessGone(WebView view, RenderProcessGoneDetail detail) {
+            if (super.onRenderProcessGone(view, detail)) return true;
+            return bridge.getActivity() instanceof MainActivity
+                && ((MainActivity) bridge.getActivity()).restartAfterRendererLoss(view, currentPage);
         }
 
         @Override

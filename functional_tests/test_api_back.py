@@ -1,6 +1,7 @@
 """The API pages' Back link, tapped through the native UI: the reader's report of 2026-11-07."""
 
 import pytest
+from selenium.common.exceptions import TimeoutException
 
 from conftest import (
     PLATFORM,
@@ -47,8 +48,17 @@ def assert_back_is_tappable(driver):
     )
     inset = safe_area(driver)[0]
     if PLATFORM == "ios":
-        # 0 means no viewport-fit=cover: the link would sit under the clock again
-        assert inset > 0
+        # 0 means no viewport-fit=cover: the link would sit under the clock again.
+        # Read again for a while: one run read 0 once on Redoc (logbook 2026-11-08).
+        try:
+            inset = wait(driver, lambda d: safe_area(d)[0], timeout=10)
+        except TimeoutException:
+            pytest.fail("safe-area top is 0; viewport tags: " + str(driver.execute_script(
+                "return [...document.querySelectorAll('meta[name=viewport]')].map(m => m.content);"
+            )))
+        top = driver.execute_script(
+            "return document.querySelector(arguments[0]).getBoundingClientRect().top;", BACK
+        )
     assert top >= inset - 0.5
     assert uncovered(driver, BACK)
 

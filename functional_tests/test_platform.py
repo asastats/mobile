@@ -21,6 +21,7 @@ from conftest import (
     safe_area,
     simctl,
     site_loaded,
+    tap,
     status_bar_style,
     wait,
     webview,
@@ -97,12 +98,35 @@ def test_a_focused_field_low_on_the_page_stays_above_the_keyboard(driver):
 # Content process
 
 
-@pytest.mark.xfail(
-    PLATFORM == "android",
-    strict=True,
-    reason="Capacitor's onRenderProcessGone returns false: Android closes the app (logbook 2026-11-08)",
-)
+def reloaded(driver):
+    """Whether the WebView shows a fresh copy of the page; on Android in a new DevTools window."""
+    try:
+        if PLATFORM == "android":
+            driver.switch_to.window(driver.window_handles[-1])
+        return driver.execute_script(
+            "return window.kept === undefined && document.readyState === 'complete';"
+        )
+    except WebDriverException:
+        return None  # still reloading or being rebuilt
+
+
+def kill_android_renderer(driver):
+    """Kill the WebView's sandboxed renderer as root (google_apis emulator image)."""
+    shell = lambda command, *args: driver.execute_script(
+        "mobile: shell", {"command": command, "args": list(args)}
+    )
+    listing = shell("ps", "-A", "-o", "PID,ARGS")
+    rows = [line.split(None, 1) for line in listing.splitlines()[1:] if "sandboxed_process" in line]
+    ours = [pid for pid, args in rows if PACKAGE in args] or [
+        pid for pid, args in rows if "webview" in args
+    ]
+    assert ours, f"no WebView renderer found:\n{listing}"
+    for pid in ours:
+        shell("su", "0", "kill", "-9", pid)
+
+
 def test_a_killed_web_content_process_brings_the_page_back(driver):
+    # Android: MainActivity rebuilds the screen on the same page (logbook 2026-11-08)
     to_faq(driver)
     driver.execute_script("window.kept = true;")
 
@@ -113,20 +137,20 @@ def test_a_killed_web_content_process_brings_the_page_back(driver):
         if killed.returncode != 0:
             pytest.skip("no WebContent process found")
     else:
-        driver.set_page_load_timeout(10)
-        try:
-            driver.get("chrome://kill")
-        except WebDriverException:
-            pass  # the renderer died under the command
+        # Not chrome://kill: chromedriver crashes with the renderer and ends the session
+        native(driver)
+        kill_android_renderer(driver)
 
     native(driver)
     time.sleep(5)
     assert driver.query_app_state(PACKAGE) == IN_FOREGROUND, "the app closed"
     webview(driver)
     try:
-        wait(driver, lambda d: script(d, "return window.kept === undefined;"), timeout=30)
+        wait(driver, reloaded, timeout=30)
     except TimeoutException:
-        pytest.skip("the content process was not killed")
+        if PLATFORM == "ios":
+            pytest.skip("the content process was not killed")
+        raise
     site_loaded(driver)
     assert driver.current_url.endswith("/faq/")
 
@@ -254,9 +278,31 @@ def test_another_site_never_opens_inside_the_app(driver):
 
     time.sleep(3)
     native(driver)
+    if PLATFORM == "ios":
+        # Browser.open shows Safari's sheet over the app; while it is up, the app's page
+        # does not answer scripts. iOS 26 names its button Close, earlier ones Done.
+        # A finger tap: the button's click() reports success and leaves the sheet up.
+        close = wait(driver, lambda d: d.find_elements(
+            "-ios predicate string", "type == 'XCUIElementTypeButton' AND name IN {'Close', 'Done'}"
+        ))[0].rect
+        tap(driver, close["x"] + close["width"] / 2, close["y"] + close["height"] / 2)
+        wait(driver, lambda d: not d.find_elements("accessibility id", "OpenInSafariButton"))
     driver.activate_app(PACKAGE)
-    webview(driver)
-    wait(driver, lambda d: script(d, "return location.origin;") == SITE)
+    # GitHub's page may stay listed (Safari's sheet, a Custom Tab); the app's own must be the site
+    wait(driver, lambda d: SITE in app_origins(d))
+
+
+def app_origins(driver):
+    """The origin each WebView context shows."""
+    origins = []
+    for name in [c for c in driver.contexts if c.startswith("WEBVIEW")]:
+        try:
+            driver.switch_to.context(name)
+        except WebDriverException:
+            continue
+        origins.append(script(driver, "return location.origin;"))
+    native(driver)
+    return origins
 
 
 @pytest.mark.android

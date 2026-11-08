@@ -7,6 +7,7 @@ Run by .github/workflows/functional.yml; see capacitor/MOBILE-TESTING.md.
 import json
 import os
 import subprocess
+import time
 from pathlib import Path
 
 import pytest
@@ -117,8 +118,16 @@ def pytest_collection_modifyitems(config, items):
 @pytest.fixture
 def driver():
     options = ios_options() if PLATFORM == "ios" else android_options()
-    session = webdriver.Remote(APPIUM, options=options)
-    session.set_script_timeout(10)  # XCUITest's default is 0 ms: every async script times out
+    try:
+        session = webdriver.Remote(APPIUM, options=options)
+    except WebDriverException as error:
+        # The simulator's launcher can miss the app just reinstalled (logbook 2026-11-08)
+        if "unknown to FrontBoard" not in str(error):
+            raise
+        time.sleep(5)
+        session = webdriver.Remote(APPIUM, options=options)
+    if PLATFORM == "ios":
+        session.set_script_timeout(10)  # XCUITest's default is 0 ms; UiAutomator2 refuses the call
     yield session
     session.quit()
 

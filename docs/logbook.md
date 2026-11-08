@@ -2054,3 +2054,110 @@ the tests: GitHub answered 504 for `capacitor-swift-pm` 8.6.0's
   dead token, the server stored it, and the first send deleted it. The logout test now
   waits until `getToken` returns a different token. A reader who logs out and quits
   the app within about a second could hit the same thing; not addressed in the app.
+
+## android/app/src/main/java/com/asastats/app/MainActivity.java: the WebView's renderer dies (2026-11-08)
+
+Capacitor 8.6.0's `BridgeWebViewClient.onRenderProcessGone` returns whatever its
+`WebViewListener`s return, and none is registered, so it returns false and Android
+closes the whole app. The renderer dies when Android reclaims memory (most likely on
+low-end phones with the app in the background), when it crashes, or during a WebView
+update. CI confirmed it with `chrome://kill`: app state 1, not running. iOS reloads the
+page instead (`webViewWebContentProcessDidTerminate`), confirmed on the simulator.
+
+`SiteErrorPagesClient.onRenderProcessGone` now returns true and calls
+`MainActivity.restartAfterRendererLoss`:
+
+- The dead WebView is removed from its parent and destroyed. Android's contract for
+  returning true is that the instance is never used again. Capacitor's later calls on
+  it (lifecycle events, `onDetachedFromWindow`'s `destroy`) hit a destroyed WebView,
+  which logs a warning and ignores them.
+- `recreate()` builds a new activity, Bridge and WebView in the same process. The
+  bridge cannot swap its WebView, so a full recreate is the only clean path.
+- The page the reader was on (tracked in `doUpdateVisitedHistory`, site pages only, so
+  never `offline.html` or `chrome://kill`) goes into the saved-state bundle under
+  `asastats_renderer_page`, only for this restart. A normal process-death restore keeps
+  starting from the home page as before. `onCreate` loads it after the bridge's own
+  start-URL load, which it supersedes.
+- A second loss within 10 s returns false, which closes the app as before. A page that
+  crashes its renderer on load would otherwise rebuild the screen forever. The timestamp
+  is static so it survives `recreate()`.
+
+Rejected: reloading the same WebView, which Android forbids after the renderer is gone,
+and routing the page through `appUrlOpen` in `deepLinks.ts`, which loads the home page
+first and makes a native fix depend on a frontend deploy.
+
+Not built locally (no Android SDK or node_modules here). CI's Debug APK step compiles it,
+and `test_a_killed_web_content_process_brings_the_page_back` changes from a strict xfail
+to a test that must pass on Android. After the rebuild, chromedriver sees a new DevTools
+window, so the test switches to the newest handle. Ships in 1.1.1, with a line in the
+Play release notes (`en-GB/changelogs/default.txt`; iOS notes unchanged).
+
+### Correction: third CI run of the 2026-11-08 tests (2026-11-08, evening)
+
+- **Android, live and local:** every test errored in the `driver` fixture. UiAutomator2
+  answers `set_script_timeout` in the native context with "Not implemented yet for
+  script". The 10 s timeout is now set on iOS only; chromedriver's own default (30 s)
+  serves Android once a test switches to the WebView.
+- **iOS:** everything passed, including both status bar tests and the content-process kill,
+  except `test_another_site_never_opens_inside_the_app`, which passed in the run before.
+  `links.ts` opens other sites with `Browser.open`, which on iOS is Safari's sheet presented
+  over the app. `activate_app` does not dismiss it, and its page can be listed as another
+  WebView context, so `webview()` could attach to GitHub's page (inferred: the iOS Appium
+  log was not in the folder). The test now taps the sheet's Done and waits for any WebView
+  context to show the site.
+
+### Correction: fourth CI run, the renderer test on Android (2026-11-08, evening)
+
+Android local: 9 passed, including the push pair, so the logout fix works. Android live:
+everything passed but `test_a_killed_web_content_process_brings_the_page_back`, which
+says nothing either way about the `MainActivity` fix. Navigating to `chrome://kill`
+made chromedriver itself exit with SIGSEGV 285 ms later. The WebView context was
+current, so Appium ended the session ("Chromedriver quit unexpectedly during session")
+and every later call got InvalidSessionIdException. Before the fix the app died with
+the renderer and chromedriver survived (app state 1 was read); why it crashes now is
+not known.
+
+The test now switches to NATIVE_APP, finds the renderer with `ps -A -o PID,ARGS`
+(`sandboxed_process` with the app's package, or else WebView's), and kills it with
+`su 0 kill -9`. The CI image is `google_apis`, which has `su`, and `adb_shell` is
+already allowed. If chromedriver dies again it does so outside the current context,
+and Appium only drops that chromedriver; I recall this from appium-uiautomator2-driver,
+not checked in its source. The next `webview()` starts a new one.
+
+### Correction: fifth CI run, iOS (2026-11-08, evening)
+
+iOS live: 15 passed. The external-site test passes with the Done tap. The one failure
+was `test_redoc_back_taps_and_returns` with `assert 0 > 0`: `env(safe-area-inset-top)`
+read 0 on the Redoc page, which passed in both earlier iOS runs. Redoc's template gets
+`viewport-fit=cover` from `api/_app_head.html`, in the server's HTML for the app's user
+agent, so the cause is either timing or a real regression. The failure artifacts
+(`appium-log-ios.zip`) were not synced. `assert_back_is_tappable` now re-reads the inset
+for 10 s, and if it stays 0 the failure message lists the page's viewport meta tags.
+That separates the two: a missing `viewport-fit=cover` is a frontend problem, while
+cover present with 0 is WebKit not having applied it yet.
+
+### Correction: sixth CI run, iOS (2026-11-08, evening)
+
+iOS live: 15 passed, including Redoc's Back test again. `test_another_site_never_opens_inside_the_app`
+failed, and this time the artifacts show why. On iOS 26 Safari's sheet closes with an
+X button named **Close**, not Done (`native.xml`, `screen.png`), so the Done lookup found
+nothing and the sheet stayed up. While the sheet covers the app, a script in the app's
+WebView does not answer: `return location.origin` came back 408 after 121 s, past the
+wait's 60 s. The app's own WebView was on `https://www.asastats.com/` throughout
+(`notes.txt`), so the app behaved correctly. The test now waits for a button named Close
+or Done, taps it, and waits until the sheet's OpenInSafariButton is gone. The pass in
+the fifth run was presumably luck in timing.
+
+### Correction: seventh CI run, iOS (2026-11-08, evening)
+
+- `test_another_site_never_opens_inside_the_app`: the predicate found the sheet's Close
+  button (x 16, y 62, 44×44, the X in `screen.png`), and its `click()` returned 200, but
+  the sheet stayed up and OpenInSafariButton never went away. The sheet is drawn by
+  SafariViewService, another process. Assumed: WDA's element click does not reach it,
+  while a synthesised touch does. Not confirmed; if it fails again, the next thing to
+  try is a swipe down on the sheet. The test now taps the button's centre with
+  `conftest.tap`.
+- `test_a_killed_web_content_process_brings_the_page_back` errored in setup: WDA could
+  not start the session because "Application com.asastats.app is unknown to FrontBoard",
+  right after the previous session ended. The fixture now retries session creation
+  once, after 5 s, for exactly that message.
