@@ -1,1 +1,1 @@
-ASA Stats Mobile is now ASA Stats. The whole of asastats.com is in the app: your account, bundles, every widget, history, profit and loss, and alerts as notifications on your phone. Sign in with the account you use on the website.
+Fixes the "No connection" screen after a brief connection drop, such as when you come back from another app. The app now reconnects by itself and returns to the page you were on.

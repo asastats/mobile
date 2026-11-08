@@ -66,7 +66,8 @@ The Store tasks
      - **Yes, at once** (after Google's check)
    * - android production
      - Promotes the release on the internal track, with its notes, to production for the
-       share of users in **rollout** (``0.2`` is 20 %).
+       share of users in **rollout** (``0.2`` is 20 %, ``1.0`` is everyone, with no
+       *android complete* afterwards).
      - Yes, to that share
    * - android complete
      - Raises the production rollout to 100 %.

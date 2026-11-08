@@ -1851,3 +1851,67 @@ account. Their screenshot shows why: they typed the credentials into the start
 screen's address field and got "Invalid Algorand address!". The only Log in
 link they could see is in the footer, and the notes never said so. The notes
 now open with the sign-in steps and say what the address field is for.
+
+### fastlane/Fastfile: "android production" with rollout 1.0 (2026-11-06)
+
+Store run 42265904530 (*android production*, rollout `1.0`) failed in the
+Fastlane step after about 3 seconds. The lane hardcoded
+`track_promote_release_status: "inProgress"`. In supply 2.241.2,
+`Uploader#promote_track` uses a rollout between 0 and 1 to set `inProgress` with
+that fraction, and otherwise sets the promote status with `user_fraction = nil`.
+So 1.0 asked Play for an in-progress release with no fraction, which the lane
+could never have produced correctly. The lane now leaves the option at supply's
+default, `completed`; 0.2 behaves as before and 1.0 is a full release.
+
+The cause comes from reading the supply source. The run's log needs a GitHub
+sign-in and was not read when this was written, so Play's own error text is not
+confirmed here.
+
+### Correction, 2026-11-06: the log of Store run 42265904530
+
+The entry above could not confirm Play's error. The user supplied the log, and it
+does: rollout `1.0`, lane `android production`, "Google Api Error: Invalid request
+- IN_PROGRESS release must have fraction". The cause there was right.
+
+### offline/offline.js, SceneDelegate `OfflineRetryDelegate`: "No connection" after switching apps (2026-11-07)
+
+A reader reported "No connection" and a short wait every time they return from another
+app, while online the whole time. No phone was attached, so **this was not reproduced,
+and which of the causes below applies to that reader is unknown** (platform and
+auto-refresh setting were not reported).
+
+What the code shows:
+
+- `offline.html` is shown for any main-frame failure, however brief. Requests made
+  during or right after a return from the background can fail while the connection is
+  still coming back.
+- iOS: `didFail` and `didFailProvisionalNavigation` also fire with `NSURLErrorCancelled`
+  when a newer navigation replaces a running one. Our delegate, like Capacitor's, then
+  loaded the error page, which cancelled the newer navigation too. A reload during a
+  slow page load was enough. Android needs no such check: as far as we recall, Chromium
+  does not report `ERR_ABORTED` to `onReceivedError` (from memory, not read in the
+  source).
+- The site's auto-refresh reloaded hidden pages (frontend logbook, `timerIncrement`).
+- The page had no way back except Retry.
+
+What changed:
+
+- `isInterruption` ignores the cancelled error and WebKit's "frame load interrupted"
+  (102). Built only by CI; there is no Swift test for it, as the delegate is in the app
+  target.
+- `offline.js` says "Reconnecting…" for 6 s, also after each return to the app, and
+  only then "No connection" with Retry. Meanwhile it requests `/favicon-16x16.png`
+  every 2 s, and as soon as anything answers it returns to the failed page. So a
+  genuinely offline cold start shows "No connection" 6 s later than before.
+- The request is `no-cors` and `no-store`: any HTTP status counts, and the site's own
+  error page then shows. It is not sent while hidden.
+- `location.replace`, for Retry too, so Back does not land on `offline.html`.
+- `RETURN_AGAIN_MS`: if the site answers but the page still fails, the next automatic
+  return waits 10 s and the page says "No connection" meanwhile, so there is no reload
+  loop.
+- The functional test now waits for the return instead of clicking Retry. On the local
+  job the probe is `http` from `https://localhost`, which should be blocked as mixed
+  content, so a local run would not return by itself; the offline test runs on the live
+  job only (`test_shell.py`).
+
+`offline.html` is in the app bundle, so this reaches readers only with a store update.

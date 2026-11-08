@@ -98,7 +98,7 @@ def test_a_missing_page_shows_the_sites_404_not_no_connection(driver):
 
 
 @pytest.mark.android
-def test_offline_shows_retry_and_retry_comes_back(driver):
+def test_offline_shows_retry_and_comes_back_by_itself(driver):
     site_loaded(driver)
     driver.get(f"{SITE}/faq/")
     site_loaded(driver)
@@ -112,15 +112,15 @@ def test_offline_shows_retry_and_retry_comes_back(driver):
             "document.body.appendChild(a); a.click();"
         )
         wait(driver, offline_page_shown)
-        assert "No connection" in driver.page_source
+        wait(driver, no_connection_said)
         wait(driver, lambda d: retry_target(d).endswith("/about/"))
     finally:
         native(driver)
         driver.execute_script("mobile: setConnectivity", {"wifi": True, "data": True})
 
-    # The emulator takes a few seconds to come back online: Retry until it does.
+    # offline.html returns by itself once the emulator is back online.
     webview(driver)
-    wait(driver, retried)
+    wait(driver, back_on_the_site)
     site_loaded(driver)
     assert driver.execute_script("return location.pathname;") == "/about/"
 
@@ -133,6 +133,13 @@ def offline_page_shown(driver):
         return False
 
 
+def no_connection_said(driver):
+    """True once offline.html's grace is over; its inlined script holds the words too."""
+    return driver.execute_script(
+        "return document.getElementById('title').textContent === 'No connection';"
+    )
+
+
 def retry_target(driver):
     """The page offline.html's Retry will open; empty until native code has set it."""
     try:
@@ -141,15 +148,11 @@ def retry_target(driver):
         return ""
 
 
-def retried(driver):
-    """Click Retry once per offline page; true once the site is back."""
-    # Once: a click every poll restarts a load that takes longer than the poll.
+def back_on_the_site(driver):
+    """True once the site is in the WebView again."""
     try:
         return driver.execute_script(
-            "var retry = document.getElementById('retry');"
-            "if (retry) { if (!window.retried) { window.retried = true; retry.click(); }"
-            " return false; }"
             "return document.documentElement.classList.contains('in-app');"
         )
     except WebDriverException:
-        return False  # the click navigated while the script ran
+        return False  # it navigated while the script ran

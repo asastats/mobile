@@ -77,12 +77,20 @@ final class OfflineRetryDelegate: NSObject, WKNavigationDelegate {
     }
 
     private func showOffline(_ webView: WKWebView, _ error: Error) {
+        guard !OfflineRetryDelegate.isInterruption(error) else { return }
         let failed = (error as NSError).userInfo[NSURLErrorFailingURLErrorKey] as? URL
         // The error page's own failure keeps the earlier page and cannot loop.
         if let failed = failed, !failed.absoluteString.hasPrefix(errorURL.absoluteString) {
             failedPage = failed
         }
         webView.load(URLRequest(url: errorURL))
+    }
+
+    /// A newer navigation took over this one: nothing about the connection (docs/logbook.md).
+    static func isInterruption(_ error: Error) -> Bool {
+        let error = error as NSError
+        return (error.domain == NSURLErrorDomain && error.code == NSURLErrorCancelled)
+            || (error.domain == "WebKitErrorDomain" && error.code == 102)
     }
 
     /// The URL as a JSON string literal, so nothing in it can end the statement.

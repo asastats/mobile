@@ -86,12 +86,12 @@ platform :android do
     play(skip_upload_metadata: false, skip_upload_images: false, skip_upload_screenshots: false)
   end
 
-  desc "The internal release to production for ROLLOUT of users (default 0.2)"
+  desc "The internal release to production for ROLLOUT of users (default 0.2; 1.0 is everyone)"
   lane :production do
     play(
       track: "internal",
       track_promote_to: "production",
-      track_promote_release_status: "inProgress",
+      # No track_promote_release_status: supply picks inProgress below 1, and 1 needs completed.
       rollout: ENV.fetch("ROLLOUT", "0.2"),
     )
   end

@@ -68,6 +68,30 @@ First launch and the shell
      - ✓
      -
      -
+   * - Hamburger, API: Back taps on opening and after scrolling, and returns to the page before
+     -
+     -
+     -
+     -
+     -
+   * - API page, Redoc: Back taps, also with Redoc's floating menu open
+     -
+     -
+     -
+     -
+     -
+   * - Profile, App Lock settings (Android 15 or later): title bar below the status bar, Back works
+     -
+     -
+     -
+     -
+     -
+   * - Scroll a long page in a dark theme: nothing shows behind the clock or home indicator; both strips match the theme
+     -
+     -
+     -
+     -
+     -
    * - Rotate to landscape and back (iPad especially): layout holds
      -
      -
@@ -709,6 +733,18 @@ Offline
      -
      -
      - ✓
+     -
+     -
+   * - Online, switch to another app and back, several times, on an address and with Auto-refresh on: never "No connection"
+     -
+     -
+     -
+     -
+     -
+   * - Offline page left alone, back online: returns to the page by itself, without Retry
+     -
+     -
+     -
      -
      -
 
