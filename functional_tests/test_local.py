@@ -7,7 +7,7 @@ import time
 from pathlib import Path
 
 import pytest
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import TimeoutException, WebDriverException
 
 from conftest import PACKAGE, SITE, TIMEOUT, USER, devices, native, sign_in, site_loaded, wait, webview
 
@@ -22,6 +22,22 @@ DEVICE_URLS = {
 def test_email_sign_in_works_in_the_app(driver):
     sign_in(driver)
 
+    assert driver.execute_script("return !!document.getElementById('logout');")
+
+
+def test_sign_in_survives_closing_the_app_from_recents(driver):
+    # The checklist's "switch away within seconds, close from recents": cookies reach disk on pause
+    sign_in(driver)
+
+    driver.background_app(2)
+    native(driver)  # the WebView is attached afresh after the restart
+    driver.terminate_app(PACKAGE)
+    driver.activate_app(PACKAGE)
+
+    site_loaded(driver)
+    driver.get(f"{SITE}/profile/")
+    site_loaded(driver)
+    assert "/accounts/login/" not in driver.current_url
     assert driver.execute_script("return !!document.getElementById('logout');")
 
 
@@ -128,13 +144,29 @@ def test_push_registers_this_device_and_logout_removes_it(driver):
     assert result == {"ok": True, "message": "This device is on."}
     assert devices() == ["android"]
 
+    before = native_token(driver)
     driver.execute_script("document.getElementById('logout').click();")
     wait(driver, lambda d: not d.execute_script("return !!document.getElementById('logout');"))
     assert devices() == []
+    # The next test's restart must not cut deleteToken short: it leaves a dead token (logbook)
+    wait(driver, lambda d: native_token(d) not in (None, before))
+
+
+def native_token(driver):
+    try:
+        return driver.execute_async_script(
+            "var done = arguments[arguments.length - 1];"
+            "Capacitor.nativePromise('FirebaseMessaging', 'getToken', {})"
+            ".then(function (r) { done(r.token); }, function () { done(null); });"
+        )
+    except WebDriverException:
+        return None  # the page navigated while the call ran
 
 
 #: Sends through the CI server's own `notify`, as an alert would.
 SEND = """
+import logging, sys
+logging.basicConfig(stream=sys.stdout, level=logging.INFO, force=True)
 from django.contrib.auth import get_user_model
 from widgets.inhouse.alerts.push import notify
 user = get_user_model().objects.get(username={user!r})

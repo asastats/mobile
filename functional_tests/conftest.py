@@ -6,6 +6,7 @@ Run by .github/workflows/functional.yml; see capacitor/MOBILE-TESTING.md.
 
 import json
 import os
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -13,7 +14,10 @@ from appium import webdriver
 from appium.common.exceptions import NoSuchContextException
 from appium.options.android import UiAutomator2Options
 from appium.options.ios import XCUITestOptions
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import TimeoutException, WebDriverException
+from selenium.webdriver.common.actions import interaction
+from selenium.webdriver.common.actions.action_builder import ActionBuilder
+from selenium.webdriver.common.actions.pointer_input import PointerInput
 from selenium.webdriver.support.ui import WebDriverWait
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -114,6 +118,7 @@ def pytest_collection_modifyitems(config, items):
 def driver():
     options = ios_options() if PLATFORM == "ios" else android_options()
     session = webdriver.Remote(APPIUM, options=options)
+    session.set_script_timeout(10)  # XCUITest's default is 0 ms: every async script times out
     yield session
     session.quit()
 
@@ -129,6 +134,8 @@ def ios_options():
     options.set_capability("appium:additionalWebviewBundleIds", ["process-App"])
     # The workflow boots the simulator without its window; otherwise Appium reboots it.
     options.set_capability("appium:isHeadless", True)
+    # The software keyboard, as on a phone: test_platform.py waits for it.
+    options.set_capability("appium:connectHardwareKeyboard", False)
     options.set_capability("appium:wdaLaunchTimeout", 240000)
     options.set_capability("appium:newCommandTimeout", 300)
     return options
@@ -208,7 +215,8 @@ def sign_in(driver):
     driver.find_element("css selector", "#id_login").send_keys(USER)
     driver.find_element("css selector", "#id_password").send_keys(PASSWORD)
     # Not button[type=submit]: production's HTML minifier drops the default type (logbook).
-    driver.find_element("css selector", "#login_form button.primaryAction").click()
+    # A DOM click: the keyboard opened by send_keys can move the button under a tap.
+    driver.execute_script("document.querySelector('#login_form button.primaryAction').click();")
     wait(driver, lambda d: "/accounts/login/" not in d.current_url)
     site_loaded(driver)
 
@@ -224,3 +232,82 @@ def devices():
             (USER,),
         ).fetchall()
     return [row[0] for row in rows]
+
+
+#: The native element that holds the page.
+WEBVIEW_CLASS = "XCUIElementTypeWebView" if PLATFORM == "ios" else "android.webkit.WebView"
+#: Appium's app states.
+IN_BACKGROUND = (2, 3)
+IN_FOREGROUND = 4
+
+
+def tap(driver, x, y):
+    """One finger tap at native coordinates (Android pixels, iOS points)."""
+    native(driver)
+    actions = ActionBuilder(driver, mouse=PointerInput(interaction.POINTER_TOUCH, "finger"))
+    actions.pointer_action.move_to_location(int(x), int(y)).pointer_down().pause(0.1).pointer_up()
+    actions.perform()
+
+
+def native_tap(driver, css):
+    """Tap the element's centre through the native UI, as a finger would; ends in NATIVE_APP."""
+    webview(driver)
+    left, top, width = driver.execute_script(
+        "var r = document.querySelector(arguments[0]).getBoundingClientRect();"
+        "return [r.left + r.width / 2, r.top + r.height / 2, window.innerWidth];",
+        css,
+    )
+    native(driver)
+    frame = driver.find_element("class name", WEBVIEW_CLASS).rect
+    scale = frame["width"] / width
+    tap(driver, frame["x"] + left * scale, frame["y"] + top * scale)
+
+
+def uncovered(driver, css):
+    """True when a tap on the element's centre reaches it, not a strip or overlay above it."""
+    return driver.execute_script(
+        "var e = document.querySelector(arguments[0]), r = e.getBoundingClientRect();"
+        "var hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);"
+        "return !!hit && (hit === e || e.contains(hit));",
+        css,
+    )
+
+
+def safe_area(driver):
+    """The page's safe-area insets in CSS pixels: top, right, bottom, left."""
+    return driver.execute_script(
+        "var p = document.createElement('div');"
+        "p.style.cssText = 'position:fixed;visibility:hidden;padding:env(safe-area-inset-top)"
+        " env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)';"
+        "document.body.appendChild(p); var s = getComputedStyle(p);"
+        "var v = [s.paddingTop, s.paddingRight, s.paddingBottom, s.paddingLeft].map(parseFloat);"
+        "p.remove(); return v;"
+    )
+
+
+def status_bar_style(driver):
+    """The native status bar's style: "DARK" is light icons, "LIGHT" dark ones."""
+    try:
+        return driver.execute_async_script(
+            "var done = arguments[arguments.length - 1];"
+            "Capacitor.nativePromise('StatusBar', 'getInfo', {})"
+            ".then(function (i) { done(i.style); }, function (e) { done('error: ' + e.message); });"
+        )
+    except WebDriverException:
+        return None  # the page navigated while the call ran
+
+
+def page_is_dark(driver):
+    """Whether the body's background is dark, judged as statusBar.ts judges it (frontend)."""
+    return driver.execute_script(
+        "var c = document.createElement('canvas').getContext('2d');"
+        "c.fillStyle = getComputedStyle(document.body).backgroundColor; c.fillRect(0, 0, 1, 1);"
+        "var d = c.getImageData(0, 0, 1, 1).data;"
+        "if (d[3] === 0) return false;"
+        "return 0.2126 * d[0] + 0.7152 * d[1] + 0.0722 * d[2] < 128;"
+    )
+
+
+def simctl(*args):
+    """Run `xcrun simctl` against the test simulator (iOS runs on the macOS host)."""
+    subprocess.run(["xcrun", "simctl", *args], check=True, timeout=60)

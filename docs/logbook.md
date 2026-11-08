@@ -1915,3 +1915,142 @@ What changed:
   job only (`test_shell.py`).
 
 `offline.html` is in the app bundle, so this reaches readers only with a store update.
+
+## functional_tests/test_api_back.py, test_platform.py, conftest.py: native taps and platform gaps (2026-11-08)
+
+Written before any run: no emulator or simulator is reachable from the Pi, so every
+test below first runs in CI (`functional.yml` live and local, `functional-ios.yml`).
+
+### Why the Back link is tapped natively
+
+The reader's report (2026-11-07) was that the API page's Back link could not be
+tapped. `element.click()` through chromedriver or the iOS remote debugger dispatches
+the DOM event straight to the element, so it passes even when the link sits under
+the iOS status bar, where a finger's tap goes to the system (scroll to top) instead.
+`native_tap` reads the element's centre in CSS pixels, scales it by the native
+WebView element's width over `innerWidth` (Android pixels, iOS points) and taps
+there with a W3C touch pointer in `NATIVE_APP`. `assert_back_is_tappable` adds two
+cheap checks: the link's top is at or below `env(safe-area-inset-top)` (and the
+inset is non-zero on iOS, which fails if `viewport-fit=cover` is lost), and
+`elementFromPoint` at its centre is the link, not the opaque strip
+(`app_safe_area.html`, z-index 9999).
+
+`test_status_bar_follows_the_page_after_back` reproduces frontend `055c065` in the
+real app: dark theme on the FAQ, the light Swagger page, Back. It reads the native
+style with `Capacitor.nativePromise('StatusBar', 'getInfo')`; "DARK" means light icons.
+
+### Research: what Capacitor leaves to the app
+
+Searched 2026-11-08; sources are third-party write-ups unless named.
+
+- **Web content process killed.** iOS: Capacitor 8.6.0
+  `WebViewDelegationHandler.webViewWebContentProcessDidTerminate` resets the bridge and
+  reloads. Android: `BridgeWebViewClient.onRenderProcessGone` returns what the
+  `WebViewListener`s return, `false` with none, and Android then kills the app
+  process. Nothing here registers a listener, so a renderer killed for memory (the
+  3,600-asset address in the background on a small phone) closes the app. The Android
+  case is `xfail(strict=True)`: when fixed, the XPASS fails the run and the marker
+  must go. Not fixed: it needs native code and a store build; the usual fix is to
+  return true and recreate the activity. Triggered with `chrome://kill` through
+  chromedriver on Android and `pkill` of the simulator's `com.apple.WebKit.WebContent`
+  on the macOS host; both unverified, so a kill that did not land skips the test.
+- **Zoom on focus.** iOS zooms into a field rendered below 16px. daisyUI's built CSS
+  raises `.input` to 1rem on focus under `@supports (-webkit-touch-callout:none)`
+  (iOS only), so this is expected to pass; the test taps natively and checks
+  `visualViewport.scale`.
+- **Pinch zoom.** A WKWebView inside an app honours `user-scalable=no` and
+  `maximum-scale=1`, which Safari ignores; blocking it fails WCAG 1.4.4.
+- **Keyboard over the field.** No Keyboard plugin here. iOS scrolls the focused
+  field itself; Android relies on the window resizing, which stops under the
+  edge-to-edge enforcement of targetSdk 35 on Android 15+. The CI emulator is API 34,
+  so a pass there says nothing about Android 15.
+- **Cookies after a restart.** WebViews write cookies lazily (`MainActivity.onPause`
+  flushes on Android; iOS WKWebView is reported to lag a few seconds). The live test
+  uses a probe cookie; the local one a real session (Android only).
+- **Dark mode, uiMode.** `uiMode` is in `configChanges`, so the activity is not
+  recreated and only the page can resync the status bar.
+- **Dynamic Type.** WKWebView does not follow the iOS text size unless the page uses
+  `font: -apple-system-body`; the site uses rem on a fixed root. `xfail(strict=True)`
+  on iOS: expected to fail, from memory of WebKit, not seen.
+- **Android Back.** Capacitor's App plugin, with no listener, does nothing at the
+  root (an Ionic forum report). `backButton.ts` (frontend) handles it: dialogs,
+  history, then `minimizeApp`.
+
+Found but not tested:
+
+- iOS long-press on a link shows WebKit's preview and menu (Open, Copy, Share);
+  Capacitor's `ios.allowsLinkPreview` defaults to true. A product choice, not a bug.
+- iOS swipe-back (`allowsBackForwardNavigationGestures`): off; see 2026-11-07.
+- Android 15+ predictive back with an always-enabled back callback: no animation
+  preview. Needs an API 35 emulator.
+- Android WebView below 140 reports wrong `env(safe-area-inset-*)`; Capacitor 8 also
+  injects `--safe-area-inset-*`. The site uses `env()` only (frontend logbook).
+- Apple's guideline 4.2 (minimum functionality) is a review judgement, not testable.
+- The iOS 26 suspend/resume freeze reported in Capacitor discussion 8569: no
+  reproduction recipe.
+
+Sources: github.com/ionic-team/capacitor/discussions/8569;
+embrace.io/blog/bug-of-the-month-blank-webviews/;
+capawesome.io/blog/capacitor-edge-to-edge-and-safe-areas-guide/;
+developer.android.com/guide/webapps/dark-theme;
+takazudo-zudo-tauri.pages.dev/pj/zudo-tauri/docs/mobile/ios-input-auto-zoom;
+forum.ionicframework.com/t/issue-with-android-back-button/249275;
+codelabs.developers.google.com/handling-gesture-back-navigation;
+besthub.dev/articles/mastering-wkwebview-common-pitfalls-multi-process-model-and-practical-solutions-b44c6788a310.
+Capacitor's own source was read from `npm pack @capacitor/android@8.6.0`,
+`@capacitor/ios@8.6.0` and `@capacitor/app@8.1.2` in the scratchpad.
+
+### conftest.py: `connectHardwareKeyboard: False` on iOS
+
+The keyboard test waits for the software keyboard, which a simulator with the Mac's
+keyboard connected does not show. It is XCUITest's default too; set to be explicit.
+
+### First CI run of the 2026-11-08 tests (correction, same day)
+
+Android run 115037697773 (live and local). iOS build and Functional (iOS) never reached
+the tests: GitHub answered 504 for `capacitor-swift-pm` 8.6.0's
+`Capacitor.xcframework.zip` and `Cordova.xcframework.zip`. A rerun is the fix.
+
+- **Back link, Swagger:** "element not interactable". The FAQ page has a hidden copy of
+  the API link in the hamburger menu, found first. `open_swagger` now clicks the
+  footer's. Redoc's Back passed with the native tap.
+- **Pinch zoom: the test was wrong.** In app mode `base.html` sets
+  `maximum-scale=1, user-scalable=no` on purpose (frontend logbook, B4, 2026-10-31: a
+  pinch on the Historic candles zoomed the WebView 5x with no way back). The test is
+  removed; the accessibility trade-off stays the frontend's decision.
+- **Killed content process, Android: confirmed.** `chrome://kill` through chromedriver
+  killed the renderer and `queryAppState` then returned 1 (not running): the app
+  closed, as read in Capacitor's source. The xfail stands.
+- **Restarts:** after `terminate_app` / `activate_app`, chromedriver was "not connected
+  to DevTools". Switching to `NATIVE_APP` before the restart, as the WalletConnect
+  test already did, attaches the WebView afresh.
+- **Dark mode: a real app bug.** With no saved theme the page followed the phone to
+  dark (`page_is_dark` true) while the status bar stayed "LIGHT" (dark icons). Fixed
+  in frontend `statusBar.ts` (logbook there, 2026-11-08); the live test stays red until
+  that is deployed.
+- **Local `test_email_sign_in_works_in_the_app`:** the first sign-in of the run sent no
+  POST (runserver.log); later sign-ins worked. Taken to be the keyboard from
+  `send_keys` moving the button under chromedriver's coordinate click; `sign_in` now
+  clicks through the DOM. A guess from the evidence, not proven.
+- **Local push tests:** `notify` returned 0 with the device registered. The reason is
+  logged by `send_native_push`, but `manage.py shell` printed no log lines, so the
+  send now configures logging to stdout. Next run shows the cause.
+
+### Correction: second CI run of the 2026-11-08 tests (2026-11-08, afternoon)
+
+- **iOS status bar tests** (`test_status_bar_follows_the_page_after_back`,
+  `test_system_dark_mode_keeps_the_status_bar_readable`) timed out on their first
+  `status_bar_style` call. XCUITest's async script timeout defaults to 0 ms, so
+  `execute_async_script` returned "Timed out ... after 0 ms" before Capacitor answered;
+  the WebDriverException was swallowed as "page navigated". The `driver` fixture now
+  sets a 10 s script timeout. Nothing was wrong in the app.
+- **Android dark mode** still failed: that run loaded `app-main-Bg1n3y9J.js`, the
+  build before the fix. The iOS run 11 minutes later already had `app-main-iqhNXdYg.js`.
+- **Local push pair**: the server's own log line, added in the previous correction,
+  said `native push token gone (404), removing`. The previous test logs out, and
+  `disablePush` calls `FirebaseMessaging.deleteToken()` (logcat 11:03:42.837); the app
+  was closed about a second later for the next session. Firebase had dropped the token
+  on its servers but not from the phone's cache, so the next `getToken` returned the
+  dead token, the server stored it, and the first send deleted it. The logout test now
+  waits until `getToken` returns a different token. A reader who logs out and quits
+  the app within about a second could hit the same thing; not addressed in the app.

@@ -88,7 +88,11 @@ The tests are in ``functional_tests/`` and carry three markers:
 ``live``
     The debug app against www.asastats.com, read-only. App mode and the user-agent
     token, ``window.ASAStatsApp``, an external link opening the browser sheet, Back,
-    a deep link, offline then Retry, text size.
+    a deep link, offline then Retry, text size. ``test_api_back.py``: the API pages'
+    Back link tapped through the native UI (``native_tap``), not ``element.click()``,
+    which would pass under the status bar too. ``test_platform.py``: what a WebView
+    shell leaves to the app (zoom on focus, the keyboard, a killed content process,
+    cookies after a restart, rotation, dark mode, Dynamic Type, Android Back).
 
 ``local``
     The debug app against a Django server that CI starts from the frontend repository
